@@ -14,6 +14,11 @@ type SampleWorker struct {
 	conn    connector.Connector
 }
 
+func NewWorker() *SampleWorker {
+	w := SampleWorker{}
+	return &w
+}
+
 func (w *SampleWorker) Start() {
 	logrus.Debug("Start")
 	w.running = true
@@ -37,7 +42,7 @@ func (w *SampleWorker) run() {
 func (w *SampleWorker) Stop() {
 	w.conn.Send(`{"type":"user::proc::disable"}`)
 	w.conn.Send(`{"type":"user::msg::unsub","section":"kernel::proc::report"}`)
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Second)
 	w.running = false
 	w.conn.Shutdown()
 	w.wg.Wait()
