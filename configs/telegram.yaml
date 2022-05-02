@@ -1,2 +1,3 @@
 token: ""
 id: 0
+db: "/var/lib/hackernel/telegram.db"

@@ -23,25 +23,39 @@ func NewWorker(token string, ownerID int64) *TelegramWorker {
 	return &w
 }
 
-func (w *TelegramWorker) Start() {
+func (w *TelegramWorker) Start() (err error) {
 	w.running = true
-	w.conn.Connect()
-	w.bot.Connect()
-
-	w.conn.Send(`{"type":"user::proc::enable"}`)
-	w.conn.Send(`{"type":"user::msg::sub","section":"audit::proc::report"}`)
+	err = w.conn.Connect()
+	if err != nil {
+		return
+	}
+	err = w.bot.Connect()
+	if err != nil {
+		return
+	}
+	err = w.conn.Send(`{"type":"user::msg::sub","section":"audit::proc::report"}`)
+	if err != nil {
+		return
+	}
 	w.wg.Add(1)
 	go w.runReportToOwner()
+	return
 }
 
-func (w *TelegramWorker) Stop() {
-	w.conn.Send(`{"type":"user::msg::unsub","section":"audit::proc::report"}`)
-	w.conn.Send(`{"type":"user::proc::disable"}`)
+func (w *TelegramWorker) Stop() (err error) {
+	err = w.conn.Send(`{"type":"user::msg::unsub","section":"audit::proc::report"}`)
+	if err != nil {
+		return
+	}
 	time.Sleep(time.Second)
 	w.running = false
-	w.conn.Shutdown()
+	err = w.conn.Shutdown()
+	if err != nil {
+		return
+	}
 	w.wg.Wait()
 	w.conn.Close()
+	return
 }
 
 func (w *TelegramWorker) runReportToOwner() {

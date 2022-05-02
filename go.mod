@@ -25,6 +25,7 @@ require (
 require (
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/google/uuid v1.3.0
+	github.com/mattn/go-sqlite3 v1.14.12
 	github.com/spf13/viper v1.11.0
 	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
 )
