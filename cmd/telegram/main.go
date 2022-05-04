@@ -15,6 +15,9 @@ import (
 func main() {
 	logger.InitLogrusFormat()
 
+	sigchan := make(chan os.Signal)
+	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+
 	config := viper.New()
 	config.SetConfigName("telegram")
 	config.SetConfigType("yaml")
@@ -34,8 +37,6 @@ func main() {
 		logrus.Fatal(err)
 	}
 
-	sigchan := make(chan os.Signal)
-	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-sigchan
 	logrus.Info(sig)
 

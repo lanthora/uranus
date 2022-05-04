@@ -59,6 +59,7 @@ func (w *TelegramWorker) Stop() (err error) {
 }
 
 func (w *TelegramWorker) runReportToOwner() {
+	defer w.wg.Done()
 	for w.running {
 		msg, err := w.conn.Recv()
 		if err != nil {
@@ -95,5 +96,5 @@ func (w *TelegramWorker) runReportToOwner() {
 			w.bot.SendTextToOwner(msg)
 		}
 	}
-	w.wg.Done()
+
 }

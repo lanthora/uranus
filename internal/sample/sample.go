@@ -2,6 +2,7 @@ package sample
 
 import (
 	"sync"
+	"syscall"
 	"time"
 	"uranus/pkg/connector"
 
@@ -30,13 +31,14 @@ func (w *SampleWorker) Start() {
 }
 
 func (w *SampleWorker) run() {
+	defer w.wg.Done()
 	for w.running {
 		msg, err := w.conn.Recv()
-		if err == nil {
-			logrus.Debugf("msg=[%s]", msg)
+		if err != nil {
+			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		}
+		logrus.Debugf("msg=[%s]", msg)
 	}
-	w.wg.Done()
 }
 
 func (w *SampleWorker) Stop() {

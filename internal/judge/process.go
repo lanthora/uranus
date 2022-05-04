@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"sync"
+	"syscall"
 	"time"
 	"uranus/pkg/connector"
 
@@ -139,13 +140,18 @@ func (w *ProcessWorker) initTrustedCmd() (err error) {
 	return
 }
 
-func (w *ProcessWorker) run() (err error) {
+func (w *ProcessWorker) run() {
+	defer w.wg.Done()
 	for w.running {
 		msg, err := w.conn.Recv()
+
+		if !w.running {
+			break
+		}
+
 		if err != nil {
-			if w.running {
-				logrus.Error(err)
-			}
+			logrus.Error(err)
+			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 			continue
 		}
 
@@ -153,6 +159,7 @@ func (w *ProcessWorker) run() (err error) {
 		err = json.Unmarshal([]byte(msg), &doc)
 		if err != nil {
 			logrus.Error(err)
+			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 			continue
 		}
 
@@ -164,18 +171,18 @@ func (w *ProcessWorker) run() (err error) {
 		times, err := w.updateCmdTimes(cmd)
 		if err != nil {
 			logrus.Error(err)
+			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 			continue
 		}
-
 		if times < 3 {
 			continue
 		}
-		if err := w.setTrustedCmd(cmd); err != nil {
+		err = w.setTrustedCmd(cmd)
+		if err != nil {
 			logrus.Error(err)
+			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		}
-
 	}
-	w.wg.Done()
 	return
 }
 
