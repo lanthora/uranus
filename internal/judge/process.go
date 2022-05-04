@@ -48,7 +48,30 @@ func (w *ProcessWorker) initDB() (err error) {
 	return
 }
 
-func (w *ProcessWorker) updateCmdTimes(cmd string) (times int, err error) {
+func (w *ProcessWorker) getCmdTimes(cmd string) (times int, err error) {
+	db, err := sql.Open("sqlite3", w.dbName)
+	if err != nil {
+		return
+	}
+	defer db.Close()
+	stmt, err := db.Prepare(sqlQueryTimesByCmd)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+
+	var id int
+	err = stmt.QueryRow(cmd).Scan(&id, &times)
+	if err == sql.ErrNoRows {
+		times = 0
+		err = nil
+		return
+	}
+	return
+}
+
+func (w *ProcessWorker) increCmdTimes(cmd string) (err error) {
+	var times int
 	db, err := sql.Open("sqlite3", w.dbName)
 	if err != nil {
 		return
@@ -163,24 +186,30 @@ func (w *ProcessWorker) run() {
 			continue
 		}
 
-		if doc["type"].(string) != "audit::proc::report" {
-			continue
-		}
-
-		cmd := doc["cmd"].(string)
-		times, err := w.updateCmdTimes(cmd)
-		if err != nil {
-			logrus.Error(err)
-			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-			continue
-		}
-		if times < 3 {
-			continue
-		}
-		err = w.setTrustedCmd(cmd)
-		if err != nil {
-			logrus.Error(err)
-			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+		if doc["type"].(string) == "kernel::proc::report" {
+			cmd := doc["cmd"].(string)
+			err := w.increCmdTimes(cmd)
+			if err != nil {
+				logrus.Error(err)
+				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+				continue
+			}
+		} else if doc["type"].(string) == "audit::proc::report" {
+			cmd := doc["cmd"].(string)
+			times, err := w.getCmdTimes(cmd)
+			if err != nil {
+				logrus.Error(err)
+				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+				continue
+			}
+			if times < 3 {
+				continue
+			}
+			err = w.setTrustedCmd(cmd)
+			if err != nil {
+				logrus.Error(err)
+				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+			}
 		}
 	}
 	return
@@ -206,6 +235,10 @@ func (w *ProcessWorker) Start() (err error) {
 	if err != nil {
 		return
 	}
+	err = w.conn.Send(`{"type":"user::msg::sub","section":"kernel::proc::report"}`)
+	if err != nil {
+		return
+	}
 
 	err = w.initTrustedCmd()
 	if err != nil {
@@ -218,6 +251,10 @@ func (w *ProcessWorker) Start() (err error) {
 }
 
 func (w *ProcessWorker) Stop() (err error) {
+	err = w.conn.Send(`{"type":"user::msg::unsub","section":"kernel::proc::report"}`)
+	if err != nil {
+		return
+	}
 	err = w.conn.Send(`{"type":"user::msg::unsub","section":"audit::proc::report"}`)
 	if err != nil {
 		return
