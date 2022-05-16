@@ -22,7 +22,10 @@ func main() {
 	config.SetConfigName("telegram")
 	config.SetConfigType("yaml")
 	config.AddConfigPath("/etc/hackernel")
-	config.ReadInConfig()
+	if err := config.ReadInConfig(); err != nil {
+		logrus.Fatal(err)
+	}
+
 	token := config.GetString("token")
 	ownerID := config.GetInt64("id")
 	dbName := config.GetString("db")

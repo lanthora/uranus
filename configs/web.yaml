@@ -1,0 +1,2 @@
+db: "/var/lib/hackernel/web.db"
+addr: "0.0.0.0:80"
