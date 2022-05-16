@@ -15,7 +15,7 @@ import (
 func main() {
 	logger.InitLogrusFormat()
 
-	sigchan := make(chan os.Signal)
+	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
 	config := viper.New()

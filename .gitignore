@@ -15,7 +15,4 @@
 vendor/
 
 go.sum
-
-cmd/sample/sample
-cmd/telegram/telegram
-cmd/web/web
+uranus-*

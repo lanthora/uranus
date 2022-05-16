@@ -15,7 +15,7 @@ import (
 func main() {
 	logger.InitLogrusFormat()
 
-	sigchan := make(chan os.Signal)
+	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
 	config := viper.New()
@@ -31,8 +31,8 @@ func main() {
 		logrus.Fatal(err)
 	}
 
-	addr := config.GetString("addr")
-	webWorker := web.NewWorker(addr)
+	listen := config.GetString("listen")
+	webWorker := web.NewWorker(listen)
 	if err := webWorker.Start(); err != nil {
 		logrus.Fatal(err)
 	}
