@@ -3,6 +3,8 @@ package judge
 import (
 	"database/sql"
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"sync"
 	"syscall"
 	"time"
@@ -35,6 +37,7 @@ func NewProcessWorker(dbName string) *ProcessWorker {
 }
 
 func (w *ProcessWorker) initDB() (err error) {
+	os.MkdirAll(filepath.Dir(w.dbName), os.ModeDir)
 	db, err := sql.Open("sqlite3", w.dbName)
 	if err != nil {
 		return
@@ -96,7 +99,7 @@ func (w *ProcessWorker) increCmdTimes(cmd string) (err error) {
 		return
 	}
 	defer stmt.Close()
-	result, err = stmt.Exec(cmd)
+	_, err = stmt.Exec(cmd)
 	if err != nil {
 		return
 	}
@@ -200,7 +203,6 @@ func (w *ProcessWorker) run() {
 			}
 		}
 	}
-	return
 }
 
 func (w *ProcessWorker) Start() (err error) {
