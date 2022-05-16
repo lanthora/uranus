@@ -1,5 +1,5 @@
 [Unit]
-Description=Uranus Telegram
+Description=Uranus Web
 After=hackernel.service
 
 [Service]
