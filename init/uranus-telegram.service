@@ -1,0 +1,9 @@
+[Unit]
+Description=Uranus Telegram
+After=hackernel.service
+
+[Service]
+ExecStart=/usr/sbin/uranus-telegram
+
+[Install]
+WantedBy=multi-user.target
