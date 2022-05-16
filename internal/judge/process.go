@@ -17,7 +17,7 @@ const (
 	sqlQueryTimesByCmd         = `select id, times from judge where cmd=? limit 1`
 	sqlQueryCmdByTimes         = `select cmd from judge where times >= ?`
 	sqlInsertCmd               = `insert into judge(cmd) values(?)`
-	sqlUpdateCmdTimes          = `update judge set times=? where id=?`
+	sqlIncreCmdTimes           = `update judge set times=times+1 where cmd=?`
 )
 
 type ProcessWorker struct {
@@ -71,46 +71,34 @@ func (w *ProcessWorker) getCmdTimes(cmd string) (times int, err error) {
 }
 
 func (w *ProcessWorker) increCmdTimes(cmd string) (err error) {
-	var times int
 	db, err := sql.Open("sqlite3", w.dbName)
 	if err != nil {
 		return
 	}
 	defer db.Close()
-	stmt, err := db.Prepare(sqlQueryTimesByCmd)
+
+	stmt, err := db.Prepare(sqlIncreCmdTimes)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-
-	var id int
-	err = stmt.QueryRow(cmd).Scan(&id, &times)
-	if err != nil && err != sql.ErrNoRows {
+	result, err := stmt.Exec(cmd)
+	if err != nil {
+		return
+	}
+	affected, err := result.RowsAffected()
+	if err != nil || affected != 0 {
 		return
 	}
 
-	if err == sql.ErrNoRows {
-		times = 1
-		stmt, err = db.Prepare(sqlInsertCmd)
-		if err != nil {
-			return
-		}
-		defer stmt.Close()
-		_, err = stmt.Exec(cmd)
-		if err != nil {
-			return
-		}
-	} else {
-		times = times + 1
-		stmt, err = db.Prepare(sqlUpdateCmdTimes)
-		if err != nil {
-			return
-		}
-		defer stmt.Close()
-		_, err = stmt.Exec(times, id)
-		if err != nil {
-			return
-		}
+	stmt, err = db.Prepare(sqlInsertCmd)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	result, err = stmt.Exec(cmd)
+	if err != nil {
+		return
 	}
 	return
 }
