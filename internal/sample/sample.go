@@ -23,9 +23,18 @@ func NewWorker() *SampleWorker {
 func (w *SampleWorker) Start() {
 	logrus.Debug("Start")
 	w.running = true
-	w.conn.Connect()
-	w.conn.Send(`{"type":"user::proc::enable"}`)
-	w.conn.Send(`{"type":"user::msg::sub","section":"kernel::proc::report"}`)
+	err := w.conn.Connect()
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	err = w.conn.Send(`{"type":"user::proc::enable"}`)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	err = w.conn.Send(`{"type":"user::msg::sub","section":"kernel::proc::report"}`)
+	if err != nil {
+		logrus.Fatal(err)
+	}
 	w.wg.Add(1)
 	go w.run()
 }
@@ -36,6 +45,8 @@ func (w *SampleWorker) run() {
 		msg, err := w.conn.Recv()
 		if err != nil {
 			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+			logrus.Error(err)
+			break
 		}
 		logrus.Debugf("msg=[%s]", msg)
 	}
@@ -46,7 +57,10 @@ func (w *SampleWorker) Stop() {
 	w.conn.Send(`{"type":"user::msg::unsub","section":"kernel::proc::report"}`)
 	time.Sleep(time.Second)
 	w.running = false
-	w.conn.Shutdown()
+	err := w.conn.Shutdown()
+	if err != nil {
+		logrus.Fatal(err)
+	}
 	w.wg.Wait()
 	w.conn.Close()
 	logrus.Debug("Stop")
