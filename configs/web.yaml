@@ -1,2 +1,7 @@
+# uranus-web 配置文件模板,启动时加载 /etc/hackernel/web.yaml
+
+# sqlite 数据库文件
 db: "/var/lib/hackernel/web.db"
+
+# web 服务监听的地址
 listen: "0.0.0.0:80"
