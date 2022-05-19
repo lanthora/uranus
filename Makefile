@@ -15,4 +15,7 @@ clean:
 		rm uranus-$$(basename $$i);									\
 	done
 
-.PHONY: build clean
+init:
+	go mod tidy
+
+.PHONY: init build clean
