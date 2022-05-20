@@ -44,11 +44,17 @@ func (w *SampleWorker) run() {
 	defer w.wg.Done()
 	for w.running {
 		msg, err := w.conn.Recv()
-		if err != nil {
-			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-			logrus.Error(err)
+
+		if !w.running {
 			break
 		}
+
+		if err != nil {
+			logrus.Error(err)
+			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+			continue
+		}
+
 		logrus.Debugf("msg=[%s]", msg)
 	}
 }

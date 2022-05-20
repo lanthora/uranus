@@ -4,6 +4,7 @@ package telegram
 import (
 	"encoding/json"
 	"sync"
+	"syscall"
 	"time"
 	"uranus/pkg/connector"
 
@@ -63,10 +64,14 @@ func (w *TelegramWorker) runReportToOwner() {
 	defer w.wg.Done()
 	for w.running {
 		msg, err := w.conn.Recv()
+
+		if !w.running {
+			break
+		}
+
 		if err != nil {
-			if w.running {
-				logrus.Error(err)
-			}
+			logrus.Error(err)
+			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 			continue
 		}
 
