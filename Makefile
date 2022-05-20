@@ -5,7 +5,10 @@ build:
 	@for i in $(CMD_BUILD_DIR_LIST);									\
 	do													\
 		cd  $$i;											\
-		go build --ldflags="-X 'uranus/pkg/logger.BuildDir=$(ROOT_DIR)/'" -o uranus-$$(basename $$i);	\
+		printf "[%s][build] %s/%s\n" $$(date +"%H:%M:%S") $$(pwd) uranus-$$(basename $$i);		\
+		go build -o uranus-$$(basename $$i) -ldflags="-X 'uranus/pkg/logger.BuildDir=$(ROOT_DIR)/'";	\
+		printf "[%s][strip] %s/%s\n" $$(date +"%H:%M:%S") $$(pwd) uranus-$$(basename $$i);		\
+		strip uranus-$$(basename $$i);									\
 	done
 
 clean:
