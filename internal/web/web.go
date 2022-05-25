@@ -31,7 +31,6 @@ func (w *WebWorker) serve() {
 		logrus.Error(err)
 		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 	}
-	return
 }
 
 func (w *WebWorker) Start() (err error) {
