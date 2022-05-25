@@ -69,7 +69,7 @@ func (w *SampleWorker) Stop() {
 	w.conn.Send(`{"type":"user::msg::unsub","section":"osinfo::report"}`)
 	time.Sleep(time.Second)
 	w.running = false
-	err := w.conn.Shutdown()
+	err := w.conn.Shutdown(time.Now())
 	if err != nil {
 		logrus.Fatal(err)
 	}

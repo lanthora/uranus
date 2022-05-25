@@ -37,6 +37,7 @@ func (w *WebWorker) Start() (err error) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.GET("/", index)
+	router.GET("/echo", echo)
 	w.server = &http.Server{
 		Addr:    w.addr,
 		Handler: router,
