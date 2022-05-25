@@ -2,11 +2,10 @@
 package web
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 )
 
 func index(context *gin.Context) {
-	context.String(http.StatusOK, "200 ok")
+	// 这里是 Web 模块在后端项目唯一需要引用的前端资源
+	context.File("/usr/share/hackernel/web/index.html")
 }
