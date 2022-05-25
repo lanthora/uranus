@@ -15,6 +15,29 @@ type Connector struct {
 	conn  *net.UnixConn
 }
 
+func New() *Connector {
+	return &Connector{}
+}
+
+func Exec(request string, timeout time.Duration) (response string, err error) {
+	conn := New()
+	if err = conn.Connect(); err != nil {
+		return
+	}
+	defer conn.Close()
+
+	if err = conn.Send(request); err != nil {
+		return
+	}
+
+	if err = conn.Shutdown(time.Now().Add(timeout)); err != nil {
+		return
+	}
+
+	response, err = conn.Recv()
+	return
+}
+
 func (c *Connector) Connect() (err error) {
 	lname := fmt.Sprintf("/tmp/hackernel-%s.sock", uuid.New().String())
 	rname := "/tmp/hackernel.sock"
@@ -40,8 +63,8 @@ func (c *Connector) Close() {
 	os.Remove(c.lname)
 }
 
-func (c *Connector) Shutdown() (err error) {
-	c.conn.SetReadDeadline(time.Now())
+func (c *Connector) Shutdown(t time.Time) (err error) {
+	c.conn.SetReadDeadline(t)
 	return
 }
 

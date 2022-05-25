@@ -51,7 +51,7 @@ func (w *TelegramWorker) Stop() (err error) {
 	}
 	time.Sleep(time.Second)
 	w.running = false
-	err = w.conn.Shutdown()
+	err = w.conn.Shutdown(time.Now())
 	if err != nil {
 		return
 	}
