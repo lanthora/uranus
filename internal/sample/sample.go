@@ -36,6 +36,10 @@ func (w *SampleWorker) Start() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+	err = w.conn.Send(`{"type":"user::msg::sub","section":"osinfo::report"}`)
+	if err != nil {
+		logrus.Fatal(err)
+	}
 	w.wg.Add(1)
 	go w.run()
 }
@@ -62,6 +66,7 @@ func (w *SampleWorker) run() {
 func (w *SampleWorker) Stop() {
 	w.conn.Send(`{"type":"user::proc::disable"}`)
 	w.conn.Send(`{"type":"user::msg::unsub","section":"kernel::proc::report"}`)
+	w.conn.Send(`{"type":"user::msg::unsub","section":"osinfo::report"}`)
 	time.Sleep(time.Second)
 	w.running = false
 	err := w.conn.Shutdown()
