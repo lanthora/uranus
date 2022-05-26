@@ -37,8 +37,15 @@ func (w *WebWorker) Start() (err error) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 
+	// 主页和静态资源
 	router.GET("/", static)
+	router.GET("/favicon.ico", static)
 	router.GET("/static/*filename", static)
+
+	// 功能页面,实际上也是静态页面
+	router.GET("/login", static)
+
+	// RESTful 接口
 	router.GET("/echo", echo)
 
 	w.server = &http.Server{

@@ -5,6 +5,7 @@ import (
 	"embed"
 	"net/http"
 	"path"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,15 +20,19 @@ var contentType = map[string]string{
 }
 
 func static(context *gin.Context) {
-	filename, ok := context.Params.Get("filename")
-	if !ok {
-		filename = "/index.html"
+	filepath := strings.TrimPrefix(context.Request.URL.String(), "/")
+	if filepath == "" {
+		filepath = filepath + "index"
 	}
-	filename = "static" + filename
-	if data, err := staticFS.ReadFile(filename); err == nil {
-		context.Data(http.StatusOK, contentType[path.Ext(filename)], data)
+	if !strings.HasPrefix(filepath, "static/") {
+		filepath = "static/" + filepath
+	}
+	if path.Ext(filepath) == "" {
+		filepath = filepath + ".html"
+	}
+	if data, err := staticFS.ReadFile(filepath); err == nil {
+		context.Data(http.StatusOK, contentType[path.Ext(filepath)], data)
 	} else {
 		context.Status(http.StatusNotFound)
 	}
-
 }
