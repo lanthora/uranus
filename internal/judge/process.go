@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 	"uranus/pkg/connector"
+	"uranus/pkg/watchdog"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
@@ -157,6 +158,10 @@ func (w *ProcessWorker) initTrustedCmd() (err error) {
 
 func (w *ProcessWorker) run() {
 	defer w.wg.Done()
+	dog := watchdog.New(time.Minute+time.Second, func() {
+		logrus.Error("ProcessWorker Recv timeout")
+		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+	})
 	for w.running {
 		msg, err := w.conn.Recv()
 
@@ -177,31 +182,32 @@ func (w *ProcessWorker) run() {
 			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 			continue
 		}
-
-		if doc["type"].(string) == "kernel::proc::report" {
+		switch doc["type"].(string) {
+		case "kernel::proc::report":
 			cmd := doc["cmd"].(string)
 			err := w.increCmdTimes(cmd)
 			if err != nil {
 				logrus.Error(err)
 				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-				continue
 			}
-		} else if doc["type"].(string) == "audit::proc::report" {
+		case "audit::proc::report":
 			cmd := doc["cmd"].(string)
 			times, err := w.getCmdTimes(cmd)
 			if err != nil {
 				logrus.Error(err)
 				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-				continue
+				break
 			}
 			if times < 3 {
-				continue
+				break
 			}
 			err = w.setTrustedCmd(cmd)
 			if err != nil {
 				logrus.Error(err)
 				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 			}
+		case "osinfo::report":
+			dog.Kick()
 		}
 	}
 }
@@ -230,6 +236,10 @@ func (w *ProcessWorker) Start() (err error) {
 	if err != nil {
 		return
 	}
+	err = w.conn.Send(`{"type":"user::msg::sub","section":"osinfo::report"}`)
+	if err != nil {
+		return
+	}
 
 	err = w.initTrustedCmd()
 	if err != nil {
@@ -247,6 +257,10 @@ func (w *ProcessWorker) Stop() (err error) {
 		return
 	}
 	err = w.conn.Send(`{"type":"user::msg::unsub","section":"audit::proc::report"}`)
+	if err != nil {
+		return
+	}
+	err = w.conn.Send(`{"type":"user::msg::unsub","section":"osinfo::report"}`)
 	if err != nil {
 		return
 	}
