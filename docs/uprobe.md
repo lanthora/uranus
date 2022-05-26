@@ -44,7 +44,6 @@ readelf --syms uranus-uprobe | grep Divide
 > to add .text section offset and function's offset within .text
 > ELF section.
 
-
 所以需要两个偏移量:
 
 * 函数在.text段中的偏移量 (0x47f500 - 0x401000)
@@ -93,7 +92,8 @@ cat /sys/kernel/debug/tracing/trace
    uranus-uprobe-14031   [007] DNZff  6798.683418: p_uranus_0x7f500: (0x47f500)
 ```
 
-接下来的目标就是从 Go 二进制中(`.gopclntab`段)计算出 `0x7f500`.
+接下来的目标就是从 Go 二进制中(`.gopclntab` 段)计算出 `0x7f500`.
+从 go 1.8 开始,不能保证从 `.gopclntab` 段一定能拿到函数地址,
+具体原因见[use the address of runtime.text as textStart](https://github.com/golang/go/commit/b38ab0ac5f78ac03a38052018ff629c03e36b864).尝试直接读二进制文件获取函数地址的项目多少存在一些问题.
 
-`strip` 去除符号表后,通过[GoReSym](https://github.com/mandiant/GoReSym)可以拿到函数地址`0x47f500`,
-与符号表中的记录地址一致.
+目前阶段,想要完美使用 uprobe 进行追踪,通过符号表获取函数地址是必不可少的步骤.
