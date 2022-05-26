@@ -158,8 +158,8 @@ func (w *ProcessWorker) initTrustedCmd() (err error) {
 
 func (w *ProcessWorker) run() {
 	defer w.wg.Done()
-	dog := watchdog.New(time.Minute+time.Second, func() {
-		logrus.Error("ProcessWorker Recv timeout")
+	dog := watchdog.New(10*time.Second, func() {
+		logrus.Error("osinfo::report timeout")
 		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 	})
 	for w.running {
