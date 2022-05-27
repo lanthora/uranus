@@ -7,8 +7,6 @@ build:
 		cd  $$i;											\
 		printf "[%s][build] %s/%s\n" $$(date +"%H:%M:%S") $$(pwd) uranus-$$(basename $$i);		\
 		go build -o uranus-$$(basename $$i) -ldflags="-X 'uranus/pkg/logger.BuildDir=$(ROOT_DIR)/'";	\
-		printf "[%s][strip] %s/%s\n" $$(date +"%H:%M:%S") $$(pwd) uranus-$$(basename $$i);		\
-		strip uranus-$$(basename $$i);									\
 	done
 
 clean:
