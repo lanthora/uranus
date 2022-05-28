@@ -22,6 +22,7 @@ type User struct {
 
 func Init(engine *gin.Engine) (err error) {
 	engine.POST("/user/login", userLogin)
+	engine.POST("/user/current", userCurrent)
 	engine.POST("/user/logout", userLogout)
 	engine.POST("/user/insert", userInsert)
 	engine.POST("/user/delete", userDelete)
@@ -58,6 +59,23 @@ func userLogin(context *gin.Context) {
 	// 设置一小时的超时时间,
 	context.SetCookie("session", session, 3600, "/", "", false, false)
 	context.JSON(http.StatusOK, response)
+}
+
+func userCurrent(context *gin.Context) {
+	session, err := context.Cookie("session")
+	if err != nil {
+		context.Status(http.StatusUnauthorized)
+		return
+	}
+
+	current, ok := loggedUser.Get(session)
+	if !ok {
+		context.Status(http.StatusUnauthorized)
+		return
+	}
+
+	context.SetCookie("session", session, 3600, "/", "", false, false)
+	context.JSON(http.StatusOK, current)
 }
 
 func userLogout(context *gin.Context) {
