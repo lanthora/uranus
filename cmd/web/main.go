@@ -38,6 +38,8 @@ func main() {
 		logrus.Fatal(err)
 	}
 
+	logrus.Info("uranus-web start")
+
 	sig := <-sigchan
 	logrus.Info(sig)
 

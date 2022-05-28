@@ -8,6 +8,9 @@ import (
 	"syscall"
 	"time"
 
+	"uranus/internal/web/control"
+	"uranus/internal/web/user"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -35,22 +38,21 @@ func (w *WebWorker) serve() {
 
 func (w *WebWorker) Start() (err error) {
 	gin.SetMode(gin.ReleaseMode)
-	router := gin.New()
+	engine := gin.New()
 
-	// 主页和静态资源
-	router.GET("/", static)
-	router.GET("/favicon.ico", static)
-	router.GET("/static/*filename", static)
+	engine.Use()
 
-	// 功能页面,实际上也是静态页面
-	router.GET("/login", static)
+	engine.GET("/", static)
+	engine.GET("/favicon.ico", static)
+	engine.GET("/static/*filename", static)
+	engine.GET("/login", static)
 
-	// RESTful 接口
-	router.GET("/echo", echo)
+	control.RegisterRoute(engine)
+	user.RegisterRoute(engine)
 
 	w.server = &http.Server{
 		Addr:    w.addr,
-		Handler: router,
+		Handler: engine,
 	}
 	w.wg.Add(1)
 	go w.serve()
