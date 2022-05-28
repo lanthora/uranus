@@ -40,6 +40,7 @@ func (w *WebWorker) Start() (err error) {
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.New()
 
+	// TODO: 添加 middleware 校验用户权限,GET请求仅用于获取静态资源,全部放过
 	engine.Use()
 
 	engine.GET("/", static)
@@ -47,8 +48,8 @@ func (w *WebWorker) Start() (err error) {
 	engine.GET("/static/*filename", static)
 	engine.GET("/login", static)
 
-	control.RegisterRoute(engine)
-	user.RegisterRoute(engine)
+	control.Init(engine)
+	user.Init(engine)
 
 	w.server = &http.Server{
 		Addr:    w.addr,
