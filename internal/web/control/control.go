@@ -10,9 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoute(engine *gin.Engine) {
+func Init(engine *gin.Engine) (err error) {
 	engine.POST("/control/echo", echo)
 	engine.POST("/control/shutdown", shutdown)
+	return
 }
 
 func echo(context *gin.Context) {

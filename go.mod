@@ -39,6 +39,7 @@ require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/google/uuid v1.3.0
+	github.com/hashicorp/golang-lru v0.5.4
 	github.com/mattn/go-sqlite3 v1.14.13
 	github.com/spf13/viper v1.11.0
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
