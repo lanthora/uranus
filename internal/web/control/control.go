@@ -16,9 +16,9 @@ func RegisterRoute(engine *gin.Engine) {
 }
 
 func echo(context *gin.Context) {
+	// 获取前端请求的参数
 	request := struct {
-		Session string `json:"session" binding:"required"`
-		Extra   string `json:"extra" binding:"required"`
+		Extra interface{} `json:"extra"`
 	}{}
 
 	if err := context.BindJSON(&request); err != nil {
@@ -26,18 +26,34 @@ func echo(context *gin.Context) {
 		return
 	}
 
-	bytes, err := json.Marshal(request)
-	if err != nil {
+	// 参数组装成底层命令
+	requestJson := map[string]interface{}{
+		"type":  "user::test::echo",
+		"extra": request.Extra,
+	}
+
+	bytes, err := json.Marshal(requestJson)
+	if err != nil || len(bytes) > 1024 {
 		context.Status(http.StatusBadRequest)
 		return
 	}
 
-	response, err := connector.Exec(string(bytes), time.Second)
+	// 转换成字符串向底层发送命令,并接收响应的字符串
+	responseStr, err := connector.Exec(string(bytes), time.Second)
 	if err != nil {
 		context.Status(http.StatusServiceUnavailable)
 		return
 	}
-	context.String(http.StatusOK, response)
+
+	// 底层返回的字符串转换后返回给前端
+	response := struct {
+		Extra interface{} `json:"extra"`
+	}{}
+	if err := json.Unmarshal([]byte(responseStr), &response); err != nil {
+		context.Status(http.StatusServiceUnavailable)
+		return
+	}
+	context.JSON(http.StatusOK, response)
 }
 
 func shutdown(context *gin.Context) {
