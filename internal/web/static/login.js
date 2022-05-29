@@ -1,13 +1,18 @@
 const { Button, Snackbar, TextField, FormControl, Alert } = window['MaterialUI'];
 
-const USERNAME = "用户名";
-const PASSWORD = "密码";
-const LOGIN = "登录";
+const LOGIN_TITLE = "登录"
+const LOGIN_USERNAME_TEXEFIELD = "用户名";
+const LOGIN_PASSWORD_TEXEFIELD = "密码";
+const LOGIN_BUTTON_TEXT = "登录";
 const LOGIN_FAILED_MSG = "登录失败"
 const LOGIN_FAILED_MSG_TIMEOUT = 3000
 
 
 function Login() {
+
+        React.useEffect(() => {
+                document.title = LOGIN_TITLE;
+        });
 
         const [open, setOpen] = React.useState(false);
 
@@ -26,15 +31,16 @@ function Login() {
         };
 
         function userLogin() {
-                console.log(username.current.value);
+                // TODO: 检查用户名密码非空
 
                 axios.post('/user/login', {
                         "username": username.current.value,
                         "password": password.current.value,
                 }).then(function (response) {
                         if (response.status == 200) {
-                                window.location
                                 window.location.replace("/");
+                        } else {
+                                openErrorNotify();
                         }
                 }).catch(function (error) {
                         if (error.response && error.response.status === 401) {
@@ -46,16 +52,16 @@ function Login() {
 
         return (
                 <span>
-                        <div className="login-center">
+                        <div className="screen-center">
                                 <FormControl>
                                         <TextField
                                                 id="username"
-                                                label={USERNAME}
+                                                label={LOGIN_USERNAME_TEXEFIELD}
                                                 size="small"
                                                 inputRef={username} />
                                         <TextField
                                                 id="password"
-                                                label={PASSWORD}
+                                                label={LOGIN_PASSWORD_TEXEFIELD}
                                                 size="small"
                                                 inputRef={password}
                                                 type="password"
@@ -63,7 +69,7 @@ function Login() {
                                         <Button
                                                 variant="contained"
                                                 onClick={userLogin}>
-                                                {LOGIN}
+                                                {LOGIN_BUTTON_TEXT}
                                         </Button>
                                 </FormControl>
                         </div>

@@ -22,7 +22,8 @@ type User struct {
 
 func Init(engine *gin.Engine) (err error) {
 	engine.POST("/user/login", userLogin)
-	engine.POST("/user/current", userCurrent)
+	engine.POST("/user/alive", userAlive)
+	engine.POST("/user/info", userInfo)
 	engine.POST("/user/logout", userLogout)
 	engine.POST("/user/insert", userInsert)
 	engine.POST("/user/delete", userDelete)
@@ -46,7 +47,7 @@ func userLogin(context *gin.Context) {
 		return
 	}
 
-	// TODO 校验身份信息并设置用户权限
+	// TODO: 校验身份信息并设置用户权限
 
 	response := User{
 		UserID:      0,
@@ -61,7 +62,21 @@ func userLogin(context *gin.Context) {
 	context.JSON(http.StatusOK, response)
 }
 
-func userCurrent(context *gin.Context) {
+func userAlive(context *gin.Context) {
+	session, err := context.Cookie("session")
+	if err != nil {
+		context.Status(http.StatusUnauthorized)
+		return
+	}
+	_, ok := loggedUser.Get(session)
+	if !ok {
+		context.Status(http.StatusUnauthorized)
+		return
+	}
+	context.Status(http.StatusOK)
+}
+
+func userInfo(context *gin.Context) {
 	session, err := context.Cookie("session")
 	if err != nil {
 		context.Status(http.StatusUnauthorized)
