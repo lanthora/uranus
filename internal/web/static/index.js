@@ -23,15 +23,14 @@ function Index() {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
-axios.post('/user/current', {})
-        .then(function (response) {
-                root.render(<Index />);
-                console.log(response);
-        })
-        .catch(function (error) {
-                if (error.response && error.response.status === 401) {
-                        window.location.replace("login");
-                }
-        });
+axios.post('/user/current', {
+}).then(function (response) {
+        root.render(<Index />);
+        console.log(response);
+}).catch(function (error) {
+        if (error.response && error.response.status === 401) {
+                window.location.replace("/login");
+        }
+});
 
 
