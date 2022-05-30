@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"uranus/internal/judge"
 	"uranus/internal/web"
 	"uranus/pkg/logger"
 
@@ -26,11 +25,6 @@ func main() {
 	if err := config.ReadInConfig(); err != nil {
 		logrus.Fatal(err)
 	}
-	dbName := config.GetString("db")
-	judgeWorker := judge.NewProcessWorker(dbName)
-	if err := judgeWorker.Start(); err != nil {
-		logrus.Fatal(err)
-	}
 
 	listen := config.GetString("listen")
 	webWorker := web.NewWorker(listen)
@@ -44,9 +38,6 @@ func main() {
 	logrus.Info(sig)
 
 	if err := webWorker.Stop(); err != nil {
-		logrus.Error(err)
-	}
-	if err := judgeWorker.Stop(); err != nil {
 		logrus.Error(err)
 	}
 }
