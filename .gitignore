@@ -19,3 +19,5 @@ cmd/sample/uranus-sample
 cmd/telegram/uranus-telegram
 cmd/web/uranus-web
 cmd/uprobe/uranus-uprobe
+internal/web/webui/*
+!.gitkeep

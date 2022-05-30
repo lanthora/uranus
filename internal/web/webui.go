@@ -5,12 +5,12 @@ import (
 	"embed"
 	"net/http"
 	"path"
-	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
-//go:embed static
+//go:embed webui
 var staticFS embed.FS
 
 var contentType = map[string]string{
@@ -19,17 +19,13 @@ var contentType = map[string]string{
 	".js":   "text/javascript; charset=UTF-8",
 }
 
-func static(context *gin.Context) {
-	filepath := strings.TrimPrefix(context.Request.URL.String(), "/")
-	if filepath == "" {
-		filepath = filepath + "index"
+func front(context *gin.Context) {
+	filepath := context.Request.URL.String()
+	logrus.Info(filepath)
+	if filepath == "/" {
+		filepath = filepath + "index.html"
 	}
-	if !strings.HasPrefix(filepath, "static/") {
-		filepath = "static/" + filepath
-	}
-	if path.Ext(filepath) == "" {
-		filepath = filepath + ".html"
-	}
+	filepath = "webui" + filepath
 	if data, err := staticFS.ReadFile(filepath); err == nil {
 		context.Data(http.StatusOK, contentType[path.Ext(filepath)], data)
 	} else {

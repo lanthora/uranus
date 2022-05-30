@@ -42,11 +42,7 @@ func (w *WebWorker) Start() (err error) {
 
 	// TODO: 添加 middleware 校验用户权限,GET请求仅用于获取静态资源,全部放过
 	engine.Use()
-
-	engine.GET("/", static)
-	engine.GET("/favicon.ico", static)
-	engine.GET("/static/*filename", static)
-	engine.GET("/login", static)
+	engine.GET("/*filename", front)
 
 	control.Init(engine)
 	user.Init(engine)
