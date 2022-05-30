@@ -11,7 +11,6 @@ function Index() {
 
         const updateUserInfo = () => {
                 axios.post('/user/info', {}).then(function (response) {
-                        console.log(response.data.aliasName);
                         setUserAlias(response.data.aliasName);
                 });
         };
