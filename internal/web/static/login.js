@@ -30,7 +30,7 @@ function Login() {
                 setOpen(false);
         };
 
-        function userLogin() {
+        function userLogin(event) {
                 // TODO: 检查用户名密码非空
 
                 axios.post('/user/login', {
@@ -47,12 +47,13 @@ function Login() {
                                 openErrorNotify();
                         }
                 });
+                event.preventDefault();
         }
 
 
         return (
                 <span>
-                        <div className="screen-center">
+                        <form className="screen-center" onSubmit={userLogin}>
                                 <FormControl>
                                         <TextField
                                                 id="username"
@@ -68,11 +69,11 @@ function Login() {
                                                 margin="dense" />
                                         <Button
                                                 variant="contained"
-                                                onClick={userLogin}>
+                                                type="submit">
                                                 {LOGIN_BUTTON_TEXT}
                                         </Button>
                                 </FormControl>
-                        </div>
+                        </form>
                         <Snackbar
                                 anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
                                 open={open}
