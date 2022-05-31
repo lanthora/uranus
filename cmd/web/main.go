@@ -32,7 +32,7 @@ func main() {
 		logrus.Fatal(err)
 	}
 
-	logrus.Info("uranus-web start")
+	logrus.Info("listen: ", listen)
 
 	sig := <-sigchan
 	logrus.Info(sig)
