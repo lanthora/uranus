@@ -7,7 +7,6 @@ import (
 	"path"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 //go:embed webui
@@ -21,7 +20,6 @@ var contentType = map[string]string{
 
 func front(context *gin.Context) {
 	filepath := context.Request.URL.String()
-	logrus.Info(filepath)
 	if filepath == "/" {
 		filepath = filepath + "index.html"
 	}
