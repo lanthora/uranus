@@ -6,6 +6,10 @@
 
 避免需要根据用户权限显示不同页面的情况.
 
-## 跳转主页
+## 跳转登录
 
-收到 401 StatusUnauthorized 状态码时跳转登录页面.
+收到 401 StatusUnauthorized 状态码时弹出登录界面,并模糊背景,登录成功后显示原页面.
+
+## 单页面应用
+
+`npm run build` 最终生成的文件中有且仅有`index.html`这一个`html`文件.
