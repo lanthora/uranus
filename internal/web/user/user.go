@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gobwas/glob"
 	"github.com/google/uuid"
 	lru "github.com/hashicorp/golang-lru"
 )
@@ -32,6 +33,43 @@ func Init(engine *gin.Engine) (err error) {
 
 	loggedUser, err = lru.New(10)
 	return
+}
+
+func Middleware() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		if context.Request.Method == http.MethodGet {
+			context.Next()
+			return
+		}
+		if context.Request.URL.Path == "/user/login" {
+			context.Next()
+			return
+		}
+		session, err := context.Cookie("session")
+		if err != nil {
+			context.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		user, ok := loggedUser.Get(session)
+		if !ok {
+			context.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		for _, p := range user.(User).Permissions {
+			g, err := glob.Compile(p)
+			if err != nil {
+				continue
+			}
+			if !g.Match(context.Request.URL.Path) {
+				continue
+			}
+			context.Next()
+			return
+		}
+		context.AbortWithStatus(http.StatusForbidden)
+	}
 }
 
 func userLogin(context *gin.Context) {
@@ -64,16 +102,7 @@ func userLogin(context *gin.Context) {
 }
 
 func userAlive(context *gin.Context) {
-	session, err := context.Cookie("session")
-	if err != nil {
-		context.Status(http.StatusUnauthorized)
-		return
-	}
-	_, ok := loggedUser.Get(session)
-	if !ok {
-		context.Status(http.StatusUnauthorized)
-		return
-	}
+	// 已经通过中间件校验,能走到这里说明已经登录成功
 	context.Status(http.StatusOK)
 }
 
@@ -101,7 +130,7 @@ func userLogout(context *gin.Context) {
 
 	context.SetSameSite(http.SameSiteNoneMode)
 	context.SetCookie("session", session, -1, "/", "", false, false)
-	context.Status(http.StatusUnauthorized)
+	context.Status(http.StatusOK)
 }
 
 func userInsert(context *gin.Context) {

@@ -2,7 +2,10 @@ module uranus
 
 go 1.18
 
-require github.com/sirupsen/logrus v1.8.1
+require (
+	github.com/gobwas/glob v0.2.3
+	github.com/sirupsen/logrus v1.8.1
+)
 
 require (
 	github.com/fsnotify/fsnotify v1.5.4 // indirect

@@ -40,10 +40,9 @@ func (w *WebWorker) Start() (err error) {
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.New()
 
-	// TODO: 添加 middleware 校验用户权限,GET请求仅用于获取静态资源,全部放过
-	engine.Use()
-	engine.GET("/*filename", front)
+	engine.Use(user.Middleware())
 
+	engine.GET("/*filename", front)
 	control.Init(engine)
 	user.Init(engine)
 
