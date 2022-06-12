@@ -96,8 +96,8 @@ func userLogin(context *gin.Context) {
 	session := uuid.NewString()
 	loggedUser.Add(session, response)
 	// 设置一小时的超时时间
-	context.SetSameSite(http.SameSiteNoneMode)
-	context.SetCookie("session", session, 3600, "/", "", false, false)
+	context.SetSameSite(http.SameSiteStrictMode)
+	context.SetCookie("session", session, 0, "/", "", false, false)
 	context.JSON(http.StatusOK, response)
 }
 
@@ -118,8 +118,8 @@ func userInfo(context *gin.Context) {
 		context.Status(http.StatusUnauthorized)
 		return
 	}
-	context.SetSameSite(http.SameSiteNoneMode)
-	context.SetCookie("session", session, 3600, "/", "", false, false)
+	context.SetSameSite(http.SameSiteStrictMode)
+	context.SetCookie("session", session, 0, "/", "", false, false)
 
 	context.JSON(http.StatusOK, current)
 }
@@ -128,7 +128,7 @@ func userLogout(context *gin.Context) {
 	session, _ := context.Cookie("session")
 	loggedUser.Remove(session)
 
-	context.SetSameSite(http.SameSiteNoneMode)
+	context.SetSameSite(http.SameSiteStrictMode)
 	context.SetCookie("session", session, -1, "/", "", false, false)
 	context.Status(http.StatusOK)
 }
