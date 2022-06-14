@@ -3,6 +3,7 @@ package user
 
 import (
 	"net/http"
+	"uranus/internal/web/render"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gobwas/glob"
@@ -47,13 +48,15 @@ func Middleware() gin.HandlerFunc {
 		}
 		session, err := context.Cookie("session")
 		if err != nil {
-			context.AbortWithStatus(http.StatusUnauthorized)
+			render.Status(context, render.StatusUnauthorized)
+			context.Abort()
 			return
 		}
 
 		user, ok := loggedUser.Get(session)
 		if !ok {
-			context.AbortWithStatus(http.StatusUnauthorized)
+			render.Status(context, render.StatusUnauthorized)
+			context.Abort()
 			return
 		}
 
@@ -68,7 +71,8 @@ func Middleware() gin.HandlerFunc {
 			context.Next()
 			return
 		}
-		context.AbortWithStatus(http.StatusForbidden)
+		render.Status(context, render.StatusLocked)
+		context.Abort()
 	}
 }
 
@@ -81,7 +85,7 @@ func userLogin(context *gin.Context) {
 	}{}
 
 	if err := context.BindJSON(&request); err != nil {
-		context.Status(http.StatusBadRequest)
+		render.Status(context, render.StatusInvalid)
 		return
 	}
 
@@ -98,30 +102,29 @@ func userLogin(context *gin.Context) {
 	// 设置一小时的超时时间
 	context.SetSameSite(http.SameSiteStrictMode)
 	context.SetCookie("session", session, 0, "/", "", false, false)
-	context.JSON(http.StatusOK, response)
+	render.Success(context, response)
 }
 
 func userAlive(context *gin.Context) {
 	// 已经通过中间件校验,能走到这里说明已经登录成功
-	context.Status(http.StatusOK)
+	render.Status(context, render.StatusSuccess)
 }
 
 func userInfo(context *gin.Context) {
 	session, err := context.Cookie("session")
 	if err != nil {
-		context.Status(http.StatusUnauthorized)
+		render.Status(context, render.StatusUnauthorized)
 		return
 	}
 
 	current, ok := loggedUser.Get(session)
 	if !ok {
-		context.Status(http.StatusUnauthorized)
+		render.Status(context, render.StatusUnauthorized)
 		return
 	}
 	context.SetSameSite(http.SameSiteStrictMode)
 	context.SetCookie("session", session, 0, "/", "", false, false)
-
-	context.JSON(http.StatusOK, current)
+	render.Success(context, current)
 }
 
 func userLogout(context *gin.Context) {
@@ -130,7 +133,7 @@ func userLogout(context *gin.Context) {
 
 	context.SetSameSite(http.SameSiteStrictMode)
 	context.SetCookie("session", session, -1, "/", "", false, false)
-	context.Status(http.StatusOK)
+	render.Status(context, render.StatusSuccess)
 }
 
 func userInsert(context *gin.Context) {

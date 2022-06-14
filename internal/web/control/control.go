@@ -3,8 +3,8 @@ package control
 
 import (
 	"encoding/json"
-	"net/http"
 	"time"
+	"uranus/internal/web/render"
 	"uranus/pkg/connector"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +23,7 @@ func echo(context *gin.Context) {
 	}{}
 
 	if err := context.BindJSON(&request); err != nil {
-		context.Status(http.StatusBadRequest)
+		render.Status(context, render.StatusInvalid)
 		return
 	}
 
@@ -35,14 +35,14 @@ func echo(context *gin.Context) {
 
 	bytes, err := json.Marshal(requestJson)
 	if err != nil || len(bytes) > 1024 {
-		context.Status(http.StatusBadRequest)
+		render.Status(context, render.StatusInvalid)
 		return
 	}
 
 	// 转换成字符串向底层发送命令,并接收响应的字符串
 	responseStr, err := connector.Exec(string(bytes), time.Second)
 	if err != nil {
-		context.Status(http.StatusServiceUnavailable)
+		render.Status(context, render.StatusUnknown)
 		return
 	}
 
@@ -51,10 +51,10 @@ func echo(context *gin.Context) {
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(responseStr), &response); err != nil {
-		context.Status(http.StatusServiceUnavailable)
+		render.Status(context, render.StatusUnknown)
 		return
 	}
-	context.JSON(http.StatusOK, response)
+	render.Success(context, response)
 }
 
 func shutdown(context *gin.Context) {
