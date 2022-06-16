@@ -23,7 +23,7 @@ func echo(context *gin.Context) {
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
-		render.Status(context, render.StatusInvalid)
+		render.Status(context, render.StatusInvalidArgument)
 		return
 	}
 
@@ -35,14 +35,14 @@ func echo(context *gin.Context) {
 
 	bytes, err := json.Marshal(requestJson)
 	if err != nil || len(bytes) > 1024 {
-		render.Status(context, render.StatusInvalid)
+		render.Status(context, render.StatusInvalidArgument)
 		return
 	}
 
 	// 转换成字符串向底层发送命令,并接收响应的字符串
 	responseStr, err := connector.Exec(string(bytes), time.Second)
 	if err != nil {
-		render.Status(context, render.StatusUnknown)
+		render.Status(context, render.StatusUnknownError)
 		return
 	}
 
@@ -51,7 +51,7 @@ func echo(context *gin.Context) {
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(responseStr), &response); err != nil {
-		render.Status(context, render.StatusUnknown)
+		render.Status(context, render.StatusUnknownError)
 		return
 	}
 	render.Success(context, response)

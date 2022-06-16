@@ -48,26 +48,26 @@ func Middleware() gin.HandlerFunc {
 		}
 		session, err := context.Cookie("session")
 		if err != nil {
-			render.Status(context, render.StatusUnauthorized)
+			render.Status(context, render.StatusNotLoggedIn)
 			context.Abort()
 			return
 		}
 
 		user, ok := loggedUser.Get(session)
 		if !ok {
-			render.Status(context, render.StatusUnauthorized)
+			render.Status(context, render.StatusNotLoggedIn)
 			context.Abort()
 			return
 		}
 
 		g, err := glob.Compile(user.(User).Permissions)
 		if err != nil {
-			render.Status(context, render.StatusLocked)
+			render.Status(context, render.StatusPermissionDenied)
 			context.Abort()
 			return
 		}
 		if !g.Match(context.Request.URL.Path) {
-			render.Status(context, render.StatusLocked)
+			render.Status(context, render.StatusPermissionDenied)
 			context.Abort()
 			return
 		}
@@ -82,7 +82,7 @@ func userLogin(context *gin.Context) {
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
-		render.Status(context, render.StatusInvalid)
+		render.Status(context, render.StatusInvalidArgument)
 		return
 	}
 
@@ -108,13 +108,13 @@ func userAlive(context *gin.Context) {
 func userInfo(context *gin.Context) {
 	session, err := context.Cookie("session")
 	if err != nil {
-		render.Status(context, render.StatusUnauthorized)
+		render.Status(context, render.StatusNotLoggedIn)
 		return
 	}
 
 	current, ok := loggedUser.Get(session)
 	if !ok {
-		render.Status(context, render.StatusUnauthorized)
+		render.Status(context, render.StatusNotLoggedIn)
 		return
 	}
 	context.SetSameSite(http.SameSiteStrictMode)
