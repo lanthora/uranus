@@ -6,30 +6,42 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	StatusSuccess      = 0
-	StatusUnknown      = 1
-	StatusUnauthorized = 2
-	StatusLocked       = 3
-	StatusInvalid      = 4
+const (
+	StatusSuccess          = 0
+	StatusUnknownError     = 1
+	StatusNotLoggedIn      = 2
+	StatusPermissionDenied = 3
+	StatusInvalidArgument  = 4
 )
+
+var messages = [...]string{
+	StatusSuccess:          "success",
+	StatusUnknownError:     "unknown error",
+	StatusNotLoggedIn:      "not logged in",
+	StatusPermissionDenied: "permission denied",
+	StatusInvalidArgument:  "invalid argument",
+}
 
 func Success(context *gin.Context, data interface{}) {
 	response := struct {
-		Status int         `json:"status" binding:"required"`
-		Data   interface{} `json:"data" binding:"required"`
+		Status  int         `json:"status" binding:"required"`
+		Message string      `json:"message" binding:"required"`
+		Data    interface{} `json:"data" binding:"required"`
 	}{
-		Status: StatusSuccess,
-		Data:   data,
+		Status:  StatusSuccess,
+		Message: messages[StatusSuccess],
+		Data:    data,
 	}
 	context.JSON(http.StatusOK, response)
 }
 
 func Status(context *gin.Context, status int) {
 	response := struct {
-		Status int `json:"status" binding:"required"`
+		Status  int    `json:"status" binding:"required"`
+		Message string `json:"message" binding:"required"`
 	}{
-		Status: status,
+		Status:  status,
+		Message: messages[status],
 	}
 	context.JSON(http.StatusOK, response)
 }
