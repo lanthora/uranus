@@ -12,6 +12,7 @@ const (
 	StatusNotLoggedIn      = 2
 	StatusPermissionDenied = 3
 	StatusInvalidArgument  = 4
+	StatusLoginFaild       = 5
 )
 
 var messages = [...]string{
@@ -20,6 +21,7 @@ var messages = [...]string{
 	StatusNotLoggedIn:      "not logged in",
 	StatusPermissionDenied: "permission denied",
 	StatusInvalidArgument:  "invalid argument",
+	StatusLoginFaild:       "login failed",
 }
 
 func Success(context *gin.Context, data interface{}) {

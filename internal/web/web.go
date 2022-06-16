@@ -19,11 +19,13 @@ type WebWorker struct {
 	addr   string
 	server *http.Server
 	wg     sync.WaitGroup
+	dbName string
 }
 
-func NewWorker(addr string) *WebWorker {
+func NewWorker(addr string, dbName string) *WebWorker {
 	w := WebWorker{
-		addr: addr,
+		addr:   addr,
+		dbName: dbName,
 	}
 	return &w
 }
@@ -43,8 +45,8 @@ func (w *WebWorker) Start() (err error) {
 	engine.Use(user.Middleware())
 
 	engine.GET("/*filename", front)
-	control.Init(engine)
-	user.Init(engine)
+	control.Init(engine, w.dbName)
+	user.Init(engine, w.dbName)
 
 	w.server = &http.Server{
 		Addr:    w.addr,
