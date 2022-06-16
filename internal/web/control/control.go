@@ -22,7 +22,7 @@ func echo(context *gin.Context) {
 		Extra interface{} `json:"extra"`
 	}{}
 
-	if err := context.BindJSON(&request); err != nil {
+	if err := context.ShouldBindJSON(&request); err != nil {
 		render.Status(context, render.StatusInvalid)
 		return
 	}

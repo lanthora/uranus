@@ -16,10 +16,10 @@ var (
 )
 
 type User struct {
-	UserID      uint64   `json:"userID" binding:"required"`
-	Username    string   `json:"username" binding:"required"`
-	AliasName   string   `json:"aliasName" binding:"required"`
-	Permissions []string `json:"permissions" binding:"required"`
+	UserID      uint64 `json:"userID" binding:"required"`
+	Username    string `json:"username" binding:"required"`
+	AliasName   string `json:"aliasName" binding:"required"`
+	Permissions string `json:"permissions" binding:"required"`
 }
 
 func Init(engine *gin.Engine) (err error) {
@@ -60,19 +60,18 @@ func Middleware() gin.HandlerFunc {
 			return
 		}
 
-		for _, p := range user.(User).Permissions {
-			g, err := glob.Compile(p)
-			if err != nil {
-				continue
-			}
-			if !g.Match(context.Request.URL.Path) {
-				continue
-			}
-			context.Next()
+		g, err := glob.Compile(user.(User).Permissions)
+		if err != nil {
+			render.Status(context, render.StatusLocked)
+			context.Abort()
 			return
 		}
-		render.Status(context, render.StatusLocked)
-		context.Abort()
+		if !g.Match(context.Request.URL.Path) {
+			render.Status(context, render.StatusLocked)
+			context.Abort()
+			return
+		}
+		context.Next()
 	}
 }
 
@@ -80,11 +79,9 @@ func userLogin(context *gin.Context) {
 	request := struct {
 		Username string `json:"username" binding:"required"`
 		Password string `json:"password" binding:"required"`
-		Sub      struct {
-		}
 	}{}
 
-	if err := context.BindJSON(&request); err != nil {
+	if err := context.ShouldBindJSON(&request); err != nil {
 		render.Status(context, render.StatusInvalid)
 		return
 	}
@@ -95,18 +92,16 @@ func userLogin(context *gin.Context) {
 		UserID:      0,
 		Username:    "root",
 		AliasName:   "root",
-		Permissions: []string{"*"},
+		Permissions: "{*}",
 	}
 	session := uuid.NewString()
 	loggedUser.Add(session, response)
-	// 设置一小时的超时时间
 	context.SetSameSite(http.SameSiteStrictMode)
 	context.SetCookie("session", session, 0, "/", "", false, false)
-	render.Success(context, response)
+	render.Status(context, render.StatusSuccess)
 }
 
 func userAlive(context *gin.Context) {
-	// 已经通过中间件校验,能走到这里说明已经登录成功
 	render.Status(context, render.StatusSuccess)
 }
 
