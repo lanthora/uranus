@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Init(engine *gin.Engine) (err error) {
+func Init(engine *gin.Engine, dbName string) (err error) {
 	engine.POST("/control/echo", echo)
 	engine.POST("/control/shutdown", shutdown)
 	return

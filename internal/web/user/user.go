@@ -2,6 +2,7 @@
 package user
 
 import (
+	"database/sql"
 	"net/http"
 	"uranus/internal/web/render"
 
@@ -9,6 +10,10 @@ import (
 	"github.com/gobwas/glob"
 	"github.com/google/uuid"
 	lru "github.com/hashicorp/golang-lru"
+)
+
+const (
+	onlineUserMax = 10
 )
 
 var (
@@ -22,7 +27,7 @@ type User struct {
 	Permissions string `json:"permissions" binding:"required"`
 }
 
-func Init(engine *gin.Engine) (err error) {
+func Init(engine *gin.Engine, dbName string) (err error) {
 	engine.POST("/user/login", userLogin)
 	engine.POST("/user/alive", userAlive)
 	engine.POST("/user/info", userInfo)
@@ -32,7 +37,13 @@ func Init(engine *gin.Engine) (err error) {
 	engine.POST("/user/update", userUpdate)
 	engine.POST("/user/query", userQuery)
 
-	loggedUser, err = lru.New(10)
+	if err = initUserTable(dbName); err != nil {
+		return
+	}
+
+	if loggedUser, err = lru.New(onlineUserMax); err != nil {
+		return
+	}
 	return
 }
 
@@ -86,13 +97,35 @@ func userLogin(context *gin.Context) {
 		return
 	}
 
-	// TODO: 校验身份信息并设置用户权限
+	ok, err := noUser()
+	if err != nil {
+		render.Status(context, render.StatusUnknownError)
+		return
+	}
+	if ok {
+		createUser(request.Username, request.Password, request.Username, `{*}`)
+	}
 
-	response := User{
-		UserID:      0,
-		Username:    "root",
-		AliasName:   "root",
-		Permissions: "{*}",
+	ok, err = checkUserPassword(request.Username, request.Password)
+	if err == sql.ErrNoRows {
+		render.Status(context, render.StatusLoginFaild)
+		return
+	}
+
+	if err != nil {
+		render.Status(context, render.StatusUnknownError)
+		return
+	}
+
+	if !ok {
+		render.Status(context, render.StatusLoginFaild)
+		return
+	}
+
+	response, err := queryUserByUsername(request.Username)
+	if err != nil {
+		render.Status(context, render.StatusUnknownError)
+		return
 	}
 	session := uuid.NewString()
 	loggedUser.Add(session, response)

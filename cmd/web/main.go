@@ -27,7 +27,8 @@ func main() {
 	}
 
 	listen := config.GetString("listen")
-	webWorker := web.NewWorker(listen)
+	dbName := config.GetString("db")
+	webWorker := web.NewWorker(listen, dbName)
 	if err := webWorker.Start(); err != nil {
 		logrus.Fatal(err)
 	}
