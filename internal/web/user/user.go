@@ -91,22 +91,18 @@ func userLogin(context *gin.Context) {
 		Username string `json:"username" binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}{}
+	deleteSession(context)
 
 	if err := context.ShouldBindJSON(&request); err != nil {
 		render.Status(context, render.StatusInvalidArgument)
 		return
 	}
 
-	ok, err := noUser()
-	if err != nil {
-		render.Status(context, render.StatusUnknownError)
-		return
-	}
-	if ok {
+	if noUser() {
 		createUser(request.Username, request.Password, request.Username, `{*}`)
 	}
 
-	ok, err = checkUserPassword(request.Username, request.Password)
+	ok, err := checkUserPassword(request.Username, request.Password)
 	if err == sql.ErrNoRows {
 		render.Status(context, render.StatusLoginFaild)
 		return
@@ -129,8 +125,7 @@ func userLogin(context *gin.Context) {
 	}
 	session := uuid.NewString()
 	loggedUser.Add(session, response)
-	context.SetSameSite(http.SameSiteStrictMode)
-	context.SetCookie("session", session, 0, "/", "", false, false)
+	updateSession(context, session)
 	render.Status(context, render.StatusSuccess)
 }
 
@@ -150,8 +145,7 @@ func userInfo(context *gin.Context) {
 		render.Status(context, render.StatusNotLoggedIn)
 		return
 	}
-	context.SetSameSite(http.SameSiteStrictMode)
-	context.SetCookie("session", session, 0, "/", "", false, false)
+	updateSession(context, session)
 	render.Success(context, current)
 }
 
@@ -159,19 +153,82 @@ func userLogout(context *gin.Context) {
 	session, _ := context.Cookie("session")
 	loggedUser.Remove(session)
 
-	context.SetSameSite(http.SameSiteStrictMode)
-	context.SetCookie("session", session, -1, "/", "", false, false)
+	deleteSession(context)
 	render.Status(context, render.StatusSuccess)
 }
 
 func userInsert(context *gin.Context) {
-}
+	request := struct {
+		Username    string `json:"username" binding:"required"`
+		Password    string `json:"password" binding:"required"`
+		AliasName   string `json:"aliasName" binding:"required"`
+		Permissions string `json:"permissions" binding:"required"`
+	}{}
 
-func userDelete(context *gin.Context) {
-}
+	if err := context.ShouldBindJSON(&request); err != nil {
+		render.Status(context, render.StatusInvalidArgument)
+		return
+	}
 
-func userUpdate(context *gin.Context) {
+	if err := createUser(request.Username, request.Password, request.AliasName, request.Permissions); err != nil {
+		render.Status(context, render.StatusCreateUserFailed)
+		return
+	}
+	render.Status(context, render.StatusSuccess)
 }
 
 func userQuery(context *gin.Context) {
+	users, err := queryAllUser()
+	if err != nil {
+		render.Status(context, render.StatusQuertUserFailed)
+		return
+	}
+	render.Success(context, users)
+}
+
+func userDelete(context *gin.Context) {
+	request := struct {
+		UserID uint64 `json:"userID" binding:"required"`
+	}{}
+
+	if err := context.ShouldBindJSON(&request); err != nil {
+		render.Status(context, render.StatusInvalidArgument)
+		return
+	}
+	if ok := deleteUser(request.UserID); !ok {
+		render.Status(context, render.StatusDeleteUserFailed)
+		return
+	}
+	render.Status(context, render.StatusSuccess)
+}
+
+func userUpdate(context *gin.Context) {
+	request := struct {
+		UserID      uint64 `json:"userID" binding:"required"`
+		Username    string `json:"username" binding:"required"`
+		Password    string `json:"password" binding:"required"`
+		AliasName   string `json:"aliasName" binding:"required"`
+		Permissions string `json:"permissions" binding:"required"`
+	}{}
+
+	if err := context.ShouldBindJSON(&request); err != nil {
+		render.Status(context, render.StatusInvalidArgument)
+		return
+	}
+
+	if ok := updateUserInfo(request.UserID, request.Username, request.Password, request.AliasName, request.Permissions); !ok {
+		render.Status(context, render.StatusCreateUserFailed)
+		return
+	}
+	render.Status(context, render.StatusSuccess)
+}
+
+func updateSession(context *gin.Context, session string) {
+	context.SetSameSite(http.SameSiteStrictMode)
+	context.SetCookie("session", session, 0, "/", "", false, false)
+}
+
+func deleteSession(context *gin.Context) {
+	context.SetSameSite(http.SameSiteStrictMode)
+	context.SetCookie("session", "deleted", -1, "/", "", false, false)
 }
