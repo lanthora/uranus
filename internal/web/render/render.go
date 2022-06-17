@@ -13,6 +13,10 @@ const (
 	StatusPermissionDenied = 3
 	StatusInvalidArgument  = 4
 	StatusLoginFaild       = 5
+	StatusCreateUserFailed = 6
+	StatusQuertUserFailed  = 7
+	StatusUpdateUserFailed = 8
+	StatusDeleteUserFailed = 9
 )
 
 var messages = [...]string{
@@ -22,6 +26,10 @@ var messages = [...]string{
 	StatusPermissionDenied: "permission denied",
 	StatusInvalidArgument:  "invalid argument",
 	StatusLoginFaild:       "login failed",
+	StatusCreateUserFailed: "create user failed",
+	StatusQuertUserFailed:  "query user failed",
+	StatusUpdateUserFailed: "update user failed",
+	StatusDeleteUserFailed: "delete user failed",
 }
 
 func Success(context *gin.Context, data interface{}) {

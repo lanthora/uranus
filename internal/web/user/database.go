@@ -45,24 +45,23 @@ func initUserTable(dbName string) (err error) {
 	return
 }
 
-func noUser() (ok bool, err error) {
+func noUser() bool {
 	db, err := sql.Open("sqlite3", userDB)
 	if err != nil {
-		return
+		return false
 	}
 	defer db.Close()
 	stmt, err := db.Prepare(sqlQueryUserCount)
 	if err != nil {
-		return
+		return false
 	}
 	defer stmt.Close()
 
 	var count int
 	if err = stmt.QueryRow().Scan(&count); err != nil {
-		return
+		return false
 	}
-	ok = (count == 0)
-	return
+	return count == 0
 }
 
 func createUser(username, password, alias, permissions string) (err error) {
@@ -128,4 +127,88 @@ func queryUserByUsername(username string) (user User, err error) {
 		return
 	}
 	return
+}
+
+func queryAllUser() (users []User, err error) {
+	db, err := sql.Open("sqlite3", userDB)
+	if err != nil {
+		return
+	}
+	defer db.Close()
+
+	stmt, err := db.Prepare(sqlQueryAllUser)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	rows, err := stmt.Query()
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var user User
+		err = rows.Scan(&user.UserID, &user.Username, &user.AliasName, &user.Permissions)
+		if err != nil {
+			return
+		}
+		users = append(users, user)
+	}
+	err = rows.Err()
+	if err != nil {
+		return
+	}
+	return
+}
+
+func updateUserInfo(id uint64, username, password, alias, permissions string) bool {
+	db, err := sql.Open("sqlite3", userDB)
+	if err != nil {
+		return false
+	}
+	defer db.Close()
+
+	stmt, err := db.Prepare(sqlUpdateUser)
+	if err != nil {
+		return false
+	}
+	defer stmt.Close()
+
+	salt := uuid.NewString()
+	sum := sha256.Sum256([]byte(salt + password))
+	hash := hex.EncodeToString(sum[:])
+
+	result, err := stmt.Exec(username, salt, hash, alias, permissions, id)
+	if err != nil {
+		return false
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return false
+	}
+	return affected == 1
+}
+
+func deleteUser(id uint64) bool {
+	db, err := sql.Open("sqlite3", userDB)
+	if err != nil {
+		return false
+	}
+	defer db.Close()
+
+	stmt, err := db.Prepare(sqlDeleteUser)
+	if err != nil {
+		return false
+	}
+	defer stmt.Close()
+
+	result, err := stmt.Exec(id)
+	if err != nil {
+		return false
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return false
+	}
+	return affected == 1
 }
