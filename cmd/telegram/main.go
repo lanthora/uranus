@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"uranus/internal/judge"
+	"uranus/internal/background"
 	"uranus/internal/telegram"
 	"uranus/pkg/logger"
 
@@ -32,12 +32,12 @@ func main() {
 	dbName := config.GetString("db")
 
 	telegramWorker := telegram.NewWorker(token, ownerID)
-	judgeWorker := judge.NewProcessWorker(dbName)
+	processWorker := background.NewProcessWorker(dbName)
 
 	if err := telegramWorker.Start(); err != nil {
 		logrus.Fatal(err)
 	}
-	if err := judgeWorker.Start(); err != nil {
+	if err := processWorker.Start(); err != nil {
 		logrus.Fatal(err)
 	}
 
@@ -45,5 +45,5 @@ func main() {
 	logrus.Info(sig)
 
 	telegramWorker.Stop()
-	judgeWorker.Stop()
+	processWorker.Stop()
 }
