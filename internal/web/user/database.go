@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 package user
 
 import (
@@ -12,10 +13,6 @@ import (
 )
 
 var (
-	userDB string
-)
-
-var (
 	sqlCreateUserTable         = `create table if not exists user(id integer primary key autoincrement, username text not null unique, salt text not null, password text not null, alias text, permissions text)`
 	sqlInsertUser              = `insert into user(username, salt, password, alias, permissions) values(?,?,?,?,?)`
 	sqlQueryUserCount          = `select count(*) from user`
@@ -26,12 +23,9 @@ var (
 	sqlDeleteUser              = `delete from user where id=?`
 )
 
-type UserInDb struct {
-}
-
-func initUserTable(dbName string) (err error) {
-	os.MkdirAll(filepath.Dir(dbName), os.ModeDir)
-	db, err := sql.Open("sqlite3", dbName)
+func (w *Worker) initUserTable() (err error) {
+	os.MkdirAll(filepath.Dir(w.dbName), os.ModeDir)
+	db, err := sql.Open("sqlite3", w.dbName)
 	if err != nil {
 		return
 	}
@@ -41,12 +35,11 @@ func initUserTable(dbName string) (err error) {
 	if err != nil {
 		return
 	}
-	userDB = dbName
 	return
 }
 
-func noUser() bool {
-	db, err := sql.Open("sqlite3", userDB)
+func (w *Worker) noUser() bool {
+	db, err := sql.Open("sqlite3", w.dbName)
 	if err != nil {
 		return false
 	}
@@ -64,12 +57,12 @@ func noUser() bool {
 	return count == 0
 }
 
-func createUser(username, password, alias, permissions string) (err error) {
+func (w *Worker) createUser(username, password, alias, permissions string) (err error) {
 	salt := uuid.NewString()
 	sum := sha256.Sum256([]byte(salt + password))
 	hash := hex.EncodeToString(sum[:])
 
-	db, err := sql.Open("sqlite3", userDB)
+	db, err := sql.Open("sqlite3", w.dbName)
 	if err != nil {
 		return
 	}
@@ -89,8 +82,8 @@ func createUser(username, password, alias, permissions string) (err error) {
 
 }
 
-func checkUserPassword(username, password string) (ok bool, err error) {
-	db, err := sql.Open("sqlite3", userDB)
+func (w *Worker) checkUserPassword(username, password string) (ok bool, err error) {
+	db, err := sql.Open("sqlite3", w.dbName)
 	if err != nil {
 		return
 	}
@@ -110,9 +103,9 @@ func checkUserPassword(username, password string) (ok bool, err error) {
 	return
 }
 
-func queryUserByUsername(username string) (user User, err error) {
+func (w *Worker) queryUserByUsername(username string) (user User, err error) {
 	user.Username = username
-	db, err := sql.Open("sqlite3", userDB)
+	db, err := sql.Open("sqlite3", w.dbName)
 	if err != nil {
 		return
 	}
@@ -129,8 +122,8 @@ func queryUserByUsername(username string) (user User, err error) {
 	return
 }
 
-func queryAllUser() (users []User, err error) {
-	db, err := sql.Open("sqlite3", userDB)
+func (w *Worker) queryAllUser() (users []User, err error) {
+	db, err := sql.Open("sqlite3", w.dbName)
 	if err != nil {
 		return
 	}
@@ -161,8 +154,8 @@ func queryAllUser() (users []User, err error) {
 	return
 }
 
-func updateUserInfo(id uint64, username, password, alias, permissions string) bool {
-	db, err := sql.Open("sqlite3", userDB)
+func (w *Worker) updateUserInfo(id uint64, username, password, alias, permissions string) bool {
+	db, err := sql.Open("sqlite3", w.dbName)
 	if err != nil {
 		return false
 	}
@@ -189,8 +182,8 @@ func updateUserInfo(id uint64, username, password, alias, permissions string) bo
 	return affected == 1
 }
 
-func deleteUser(id uint64) bool {
-	db, err := sql.Open("sqlite3", userDB)
+func (w *Worker) deleteUser(id uint64) bool {
+	db, err := sql.Open("sqlite3", w.dbName)
 	if err != nil {
 		return false
 	}
