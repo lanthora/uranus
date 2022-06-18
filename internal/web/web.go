@@ -40,13 +40,20 @@ func (w *WebWorker) serve() {
 
 func (w *WebWorker) Start() (err error) {
 	gin.SetMode(gin.ReleaseMode)
+
 	engine := gin.New()
-
-	engine.Use(user.Middleware())
-
 	engine.GET("/*filename", front)
+
 	control.Init(engine, w.dbName)
-	user.Init(engine, w.dbName)
+
+	userWorker, err := user.NewWorker(engine, w.dbName)
+	if err != nil {
+		return
+	}
+	err = userWorker.Init()
+	if err != nil {
+		return
+	}
 
 	w.server = &http.Server{
 		Addr:    w.addr,
