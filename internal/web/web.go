@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"uranus/internal/web/control"
+	"uranus/internal/web/process"
 	"uranus/internal/web/user"
 
 	"github.com/gin-gonic/gin"
@@ -44,16 +45,15 @@ func (w *WebWorker) Start() (err error) {
 	engine := gin.New()
 	engine.GET("/*filename", front)
 
-	control.Init(engine, w.dbName)
+	if err = user.Init(engine, w.dbName); err != nil {
+		return
+	}
 
-	userWorker, err := user.NewWorker(engine, w.dbName)
-	if err != nil {
+	if err = process.Init(engine, w.dbName); err != nil {
 		return
 	}
-	err = userWorker.Init()
-	if err != nil {
-		return
-	}
+
+	control.Init(engine, w.dbName)
 
 	w.server = &http.Server{
 		Addr:    w.addr,

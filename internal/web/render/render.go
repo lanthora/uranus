@@ -8,29 +8,39 @@ import (
 )
 
 const (
-	StatusSuccess          = 0
-	StatusUnknownError     = 1
-	StatusNotLoggedIn      = 2
-	StatusPermissionDenied = 3
-	StatusInvalidArgument  = 4
-	StatusLoginFaild       = 5
-	StatusCreateUserFailed = 6
-	StatusQuertUserFailed  = 7
-	StatusUpdateUserFailed = 8
-	StatusDeleteUserFailed = 9
+	StatusSuccess                        = 0
+	StatusUnknownError                   = 1
+	StatusNotLoggedIn                    = 2
+	StatusPermissionDenied               = 3
+	StatusInvalidArgument                = 4
+	StatusLoginFaild                     = 5
+	StatusCreateUserFailed               = 6
+	StatusQuertUserFailed                = 7
+	StatusUpdateUserFailed               = 8
+	StatusDeleteUserFailed               = 9
+	StatusUpdateProcessJudgeFailed       = 10
+	StatusUpdateProcessEventStatusFailed = 11
+	StatusQueryProcessEventFailed        = 12
+	StatusProcessEnableFailed            = 13
+	StatusProcessDisableFailed           = 14
 )
 
 var messages = [...]string{
-	StatusSuccess:          "success",
-	StatusUnknownError:     "unknown error",
-	StatusNotLoggedIn:      "not logged in",
-	StatusPermissionDenied: "permission denied",
-	StatusInvalidArgument:  "invalid argument",
-	StatusLoginFaild:       "login failed",
-	StatusCreateUserFailed: "create user failed",
-	StatusQuertUserFailed:  "query user failed",
-	StatusUpdateUserFailed: "update user failed",
-	StatusDeleteUserFailed: "delete user failed",
+	StatusSuccess:                        "success",
+	StatusUnknownError:                   "unknown error",
+	StatusNotLoggedIn:                    "not logged in",
+	StatusPermissionDenied:               "permission denied",
+	StatusInvalidArgument:                "invalid argument",
+	StatusLoginFaild:                     "login failed",
+	StatusCreateUserFailed:               "create user failed",
+	StatusQuertUserFailed:                "query user failed",
+	StatusUpdateUserFailed:               "update user failed",
+	StatusDeleteUserFailed:               "delete user failed",
+	StatusUpdateProcessJudgeFailed:       "update process judge failed",
+	StatusUpdateProcessEventStatusFailed: "update process event status failed",
+	StatusQueryProcessEventFailed:        "query process event failed",
+	StatusProcessEnableFailed:            "process enable failed",
+	StatusProcessDisableFailed:           "process disable failed",
 }
 
 func Success(context *gin.Context, data interface{}) {

@@ -4,19 +4,8 @@ package telegram
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
+	"uranus/pkg/process"
 )
-
-func ParseHackernelCmd(cmd string) (workdir string, exec string, argv string) {
-	raw := strings.Split(cmd, "\u001f")
-	workdir = raw[0]
-	exec = raw[1]
-	argv = raw[2]
-	for i := 3; i < len(raw); i++ {
-		argv += fmt.Sprintf(" %s", raw[i])
-	}
-	return
-}
 
 func RenderAuditProcReport(text string) (richText string) {
 	var doc map[string]interface{}
@@ -26,12 +15,13 @@ func RenderAuditProcReport(text string) (richText string) {
 		return
 	}
 	judge := doc["judge"].(float64)
-	workdir, exec, argv := ParseHackernelCmd(doc["cmd"].(string))
+
+	workdir, binary, argv := process.SplitCmd(doc["cmd"].(string))
 	richText += "<b>进程审计</b>\n\n"
 	richText += "工作目录: "
 	richText += fmt.Sprintf("<u>%s</u>\n\n", workdir)
 	richText += "可执行程序: "
-	richText += fmt.Sprintf("<u>%s</u>\n\n", exec)
+	richText += fmt.Sprintf("<u>%s</u>\n\n", binary)
 	richText += "参数列表: "
 	richText += fmt.Sprintf("<u>%s</u>\n\n", argv)
 	richText += "状态: "
