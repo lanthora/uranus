@@ -20,30 +20,22 @@ type Worker struct {
 	loggedUser    *lru.Cache
 }
 
-func NewWorker(engine *gin.Engine, dbName string) (c *Worker, err error) {
+func Init(engine *gin.Engine, dbName string) (err error) {
 	onlineUserMax := 10
 	loggedUser, err := lru.New(onlineUserMax)
 	if err != nil {
 		return
 	}
 
-	c = &Worker{
+	w := &Worker{
 		loggedUser:    loggedUser,
 		onlineUserMax: onlineUserMax,
 		engine:        engine,
 		dbName:        dbName,
 	}
-	return
-}
 
-type User struct {
-	UserID      uint64 `json:"userID" binding:"required"`
-	Username    string `json:"username" binding:"required"`
-	AliasName   string `json:"aliasName" binding:"required"`
-	Permissions string `json:"permissions" binding:"required"`
-}
+	w.engine.Use(w.middleware())
 
-func (w *Worker) Init() (err error) {
 	w.engine.POST("/user/login", w.userLogin)
 	w.engine.POST("/user/alive", w.userAlive)
 	w.engine.POST("/user/info", w.userInfo)
@@ -53,12 +45,18 @@ func (w *Worker) Init() (err error) {
 	w.engine.POST("/user/update", w.userUpdate)
 	w.engine.POST("/user/query", w.userQuery)
 
-	w.engine.Use(w.middleware())
-
 	if err = w.initUserTable(); err != nil {
 		return
 	}
 	return
+
+}
+
+type User struct {
+	UserID      uint64 `json:"userID" binding:"required"`
+	Username    string `json:"username" binding:"required"`
+	AliasName   string `json:"aliasName" binding:"required"`
+	Permissions string `json:"permissions" binding:"required"`
 }
 
 func (w *Worker) middleware() gin.HandlerFunc {
@@ -202,7 +200,7 @@ func (w *Worker) userQuery(context *gin.Context) {
 
 func (w *Worker) userDelete(context *gin.Context) {
 	request := struct {
-		UserID uint64 `json:"userID" binding:"required"`
+		UserID uint64 `json:"userID" binding:"number"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -218,7 +216,7 @@ func (w *Worker) userDelete(context *gin.Context) {
 
 func (w *Worker) userUpdate(context *gin.Context) {
 	request := struct {
-		UserID      uint64 `json:"userID" binding:"required"`
+		UserID      uint64 `json:"userID" binding:"number"`
 		Username    string `json:"username" binding:"required"`
 		Password    string `json:"password" binding:"required"`
 		AliasName   string `json:"aliasName" binding:"required"`
