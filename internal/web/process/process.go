@@ -170,6 +170,25 @@ func setTrustedCmd(cmd string) (err error) {
 	return
 }
 
+func setUntrustedCmd(cmd string) (err error) {
+	data := map[string]string{
+		"type": "user::proc::trusted::delete",
+		"cmd":  cmd,
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		return
+	}
+
+	// TODO: 更细致的判断是否执行成功
+	_, err = connector.Exec(string(b), time.Second)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	return
+}
+
 func (w *Worker) eventUpdate(context *gin.Context) {
 	request := struct {
 		ID     int `json:"id" binding:"number"`
@@ -181,17 +200,22 @@ func (w *Worker) eventUpdate(context *gin.Context) {
 		return
 	}
 
-	if request.Status == status.ProcessTrusted {
-		cmd, err := w.queryCmdById(request.ID)
-		if err != nil {
-			render.Status(context, render.StatusInvalidArgument)
-			return
-		}
+	cmd, err := w.queryCmdById(request.ID)
+	if err != nil {
+		render.Status(context, render.StatusInvalidArgument)
+		return
+	}
+
+	switch request.Status {
+	case status.ProcessTrusted:
 		err = setTrustedCmd(cmd)
-		if err != nil {
-			render.Status(context, render.StatusUpdateProcessEventStatusFailed)
-			return
-		}
+	default:
+		err = setUntrustedCmd(cmd)
+	}
+
+	if err != nil {
+		render.Status(context, render.StatusUpdateProcessEventStatusFailed)
+		return
 	}
 
 	ok := w.updateStatus(uint64(request.ID), request.Status)
