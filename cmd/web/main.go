@@ -35,6 +35,11 @@ func main() {
 		logrus.Fatal(err)
 	}
 
+	fileWorker := background.NewFileWorker(dbName)
+	if err := fileWorker.Start(); err != nil {
+		logrus.Fatal(err)
+	}
+
 	webWorker := web.NewWorker(listen, dbName)
 	if err := webWorker.Start(); err != nil {
 		logrus.Fatal(err)
@@ -50,6 +55,10 @@ func main() {
 	}
 
 	if err := processWorker.Stop(); err != nil {
+		logrus.Error(err)
+	}
+
+	if err := fileWorker.Stop(); err != nil {
 		logrus.Error(err)
 	}
 }

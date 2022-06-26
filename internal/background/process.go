@@ -12,7 +12,6 @@ import (
 	"uranus/internal/config"
 	"uranus/pkg/connector"
 	"uranus/pkg/process"
-	"uranus/pkg/status"
 	"uranus/pkg/watchdog"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -20,18 +19,11 @@ import (
 )
 
 const (
-	// 初始化时创建数据表添加索引
-	sqlCreateTable = `create table if not exists process(id integer primary key autoincrement, cmd blob not null unique, workdir text not null, binary text not null, argv text not null, count integer not null, judge integer not null, status integer not null)`
-	sqlCreateIndex = `create unique index if not exists process_cmd_idx on process (cmd)`
-
-	// 上报进程审计事件(可信进程不上报此事件)时更新计数和审计状态(放行或是阻止)
-	sqlUpdateCount = `update process set count=count+1,judge=? where cmd=?`
-
-	// 更新计数时发现命令没有执行过,插入新命令.
-	sqlInsert = `insert into process(cmd,workdir,binary,argv,count,judge,status) values(?,?,?,?,1,?,0)`
-
-	// 查询允许执行的命令,初始化 hackernel
-	sqlQueryStatusAllow = `select cmd from process where status=2`
+	sqlCreateProcessTable    = `create table if not exists process_event(id integer primary key autoincrement, cmd blob not null unique, workdir text not null, binary text not null, argv text not null, count integer not null, judge integer not null, status integer not null)`
+	sqlCreateProcessCmdIndex = `create unique index if not exists process_cmd_idx on process_event (cmd)`
+	sqlUpdateProcessCount    = `update process_event set count=count+1,judge=? where cmd=?`
+	sqlInsertProcessEvent    = `insert into process_event(cmd,workdir,binary,argv,count,judge,status) values(?,?,?,?,1,?,0)`
+	sqlQueryAllowedProcesses = `select cmd from process_event where status=2`
 )
 
 type ProcessWorker struct {
@@ -58,12 +50,12 @@ func (w *ProcessWorker) initDB() (err error) {
 	}
 	defer db.Close()
 
-	_, err = db.Exec(sqlCreateTable)
+	_, err = db.Exec(sqlCreateProcessTable)
 	if err != nil {
 		return
 	}
 
-	_, err = db.Exec(sqlCreateIndex)
+	_, err = db.Exec(sqlCreateProcessCmdIndex)
 	if err != nil {
 		return
 	}
@@ -98,7 +90,7 @@ func (w *ProcessWorker) initTrustedCmd() (err error) {
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare(sqlQueryStatusAllow)
+	stmt, err := db.Prepare(sqlQueryAllowedProcesses)
 	if err != nil {
 		return
 	}
@@ -130,7 +122,7 @@ func (w *ProcessWorker) updateCmd(cmd string, judge int) (err error) {
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare(sqlUpdateCount)
+	stmt, err := db.Prepare(sqlUpdateProcessCount)
 	if err != nil {
 		return
 	}
@@ -144,7 +136,7 @@ func (w *ProcessWorker) updateCmd(cmd string, judge int) (err error) {
 		return
 	}
 
-	stmt, err = db.Prepare(sqlInsert)
+	stmt, err = db.Prepare(sqlInsertProcessEvent)
 	if err != nil {
 		return
 	}
@@ -212,8 +204,8 @@ func (w *ProcessWorker) Start() (err error) {
 		return
 	}
 
-	coreStatus, err := w.config.GetInteger("proc::core::status")
-	if err == nil && coreStatus == status.ProcessCoreEnable {
+	status, err := w.config.GetInteger("proc::core::status")
+	if err == nil && status == process.StatusEnable {
 		err = w.conn.Send(`{"type":"user::proc::enable"}`)
 		if err != nil {
 			return
@@ -249,12 +241,9 @@ func (w *ProcessWorker) Stop() (err error) {
 		return
 	}
 
-	coreStatus, err := w.config.GetInteger("proc::core::status")
-	if err == nil && coreStatus == status.ProcessCoreEnable {
-		err = w.conn.Send(`{"type":"user::proc::disable"}`)
-		if err != nil {
-			return
-		}
+	err = w.conn.Send(`{"type":"user::proc::disable"}`)
+	if err != nil {
+		return
 	}
 
 	time.Sleep(time.Second)

@@ -6,12 +6,9 @@ import (
 )
 
 const (
-	// 提供给前端的可分页的查询功能
-	sqlQueryLimitOffset = `select id,workdir,binary,argv,count,judge,status from process limit ? offset ?`
-	// 前端发送请求更新处理方式
-	sqlUpdateStatus = `update process set status=? where id=?`
-	// 如果处理方式是设置为信任,需要从数据库查出 cmd 并设置给底层
-	sqlQueryCmdById = `select cmd from process where id=?`
+	sqlQueryProcessLimitOffset = `select id,workdir,binary,argv,count,judge,status from process_event limit ? offset ?`
+	sqlUpdateProcessStatus     = `update process_event set status=? where id=?`
+	sqlQueryProcessCmdById     = `select cmd from process_event where id=?`
 )
 
 func (w *Worker) queryLimitOffset(limit, offset int) (events []Event, err error) {
@@ -21,7 +18,7 @@ func (w *Worker) queryLimitOffset(limit, offset int) (events []Event, err error)
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare(sqlQueryLimitOffset)
+	stmt, err := db.Prepare(sqlQueryProcessLimitOffset)
 	if err != nil {
 		return
 	}
@@ -50,7 +47,7 @@ func (w *Worker) updateStatus(id uint64, status int) bool {
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare(sqlUpdateStatus)
+	stmt, err := db.Prepare(sqlUpdateProcessStatus)
 	if err != nil {
 		return false
 	}
@@ -73,7 +70,7 @@ func (w *Worker) queryCmdById(id int) (cmd string, err error) {
 		return
 	}
 	defer db.Close()
-	stmt, err := db.Prepare(sqlQueryCmdById)
+	stmt, err := db.Prepare(sqlQueryProcessCmdById)
 	if err != nil {
 		return
 	}

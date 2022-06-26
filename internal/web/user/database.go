@@ -12,7 +12,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var (
+const (
 	sqlCreateUserTable         = `create table if not exists user(id integer primary key autoincrement, username text not null unique, salt text not null, password text not null, alias text, permissions text)`
 	sqlInsertUser              = `insert into user(username, salt, password, alias, permissions) values(?,?,?,?,?)`
 	sqlQueryUserCount          = `select count(*) from user`
