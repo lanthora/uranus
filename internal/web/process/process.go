@@ -8,7 +8,6 @@ import (
 	"uranus/internal/web/render"
 	"uranus/pkg/connector"
 	"uranus/pkg/process"
-	"uranus/pkg/status"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -41,32 +40,33 @@ func Init(engine *gin.Engine, dbName string) (err error) {
 		dbName: dbName,
 		config: config,
 	}
-	w.engine.POST("/process/core/status", w.coreStatus)
-	w.engine.POST("/process/core/enable", w.coreEnable)
-	w.engine.POST("/process/core/disable", w.coreDisable)
-	w.engine.POST("/process/judge/status", w.judgeStatus)
-	w.engine.POST("/process/judge/update", w.judgeUpdate)
-	w.engine.POST("/process/event/list", w.eventList)
-	w.engine.POST("/process/event/update", w.eventUpdate)
+	w.engine.POST("/process/core/status", w.processCoreStatus)
+	w.engine.POST("/process/core/enable", w.processCoreEnable)
+	w.engine.POST("/process/core/disable", w.processCoreDisable)
+	w.engine.POST("/process/judge/status", w.processJudgeStatus)
+	w.engine.POST("/process/judge/update", w.processJudgeUpdate)
+	w.engine.POST("/process/event/list", w.processEventList)
+	w.engine.POST("/process/event/update", w.processEventUpdate)
+	w.engine.POST("/process/event/delete", w.processEventDelete)
 	return
 }
 
-func (w *Worker) coreStatus(context *gin.Context) {
-	core, err := w.config.GetInteger("proc::core::status")
+func (w *Worker) processCoreStatus(context *gin.Context) {
+	status, err := w.config.GetInteger("proc::core::status")
 	if err != nil {
-		core = status.ProcessCoreDisable
+		status = process.StatusDisable
 	}
 
 	response := struct {
 		Core int `json:"core" binding:"required"`
 	}{
-		Core: core,
+		Core: status,
 	}
 
 	render.Success(context, response)
 }
-func (w *Worker) coreEnable(context *gin.Context) {
-	if err := w.config.SetInteger("proc::core::status", status.ProcessCoreEnable); err != nil {
+func (w *Worker) processCoreEnable(context *gin.Context) {
+	if err := w.config.SetInteger("proc::core::status", process.StatusEnable); err != nil {
 		render.Status(context, render.StatusProcessEnableFailed)
 		return
 	}
@@ -77,8 +77,8 @@ func (w *Worker) coreEnable(context *gin.Context) {
 	}
 	render.Status(context, render.StatusSuccess)
 }
-func (w *Worker) coreDisable(context *gin.Context) {
-	if err := w.config.SetInteger("proc::core::status", status.ProcessCoreDisable); err != nil {
+func (w *Worker) processCoreDisable(context *gin.Context) {
+	if err := w.config.SetInteger("proc::core::status", process.StatusDisable); err != nil {
 		render.Status(context, render.StatusProcessDisableFailed)
 		return
 	}
@@ -90,10 +90,10 @@ func (w *Worker) coreDisable(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) judgeStatus(context *gin.Context) {
-	judge, err := w.config.GetInteger("proc::judge::status")
+func (w *Worker) processJudgeStatus(context *gin.Context) {
+	judge, err := w.config.GetInteger("proc::core::status")
 	if err != nil {
-		judge = status.ProcessJudgeDisable
+		judge = process.StatusJudgeDisable
 	}
 
 	response := struct {
@@ -105,7 +105,7 @@ func (w *Worker) judgeStatus(context *gin.Context) {
 	render.Success(context, response)
 }
 
-func (w *Worker) judgeUpdate(context *gin.Context) {
+func (w *Worker) processJudgeUpdate(context *gin.Context) {
 	request := struct {
 		Judge int `json:"judge" binding:"number"`
 	}{}
@@ -115,7 +115,7 @@ func (w *Worker) judgeUpdate(context *gin.Context) {
 		return
 	}
 
-	if request.Judge < status.ProcessJudgeDisable || request.Judge > status.ProcessJudgeProtect {
+	if request.Judge < process.StatusJudgeDisable || request.Judge > process.StatusJudgeProtect {
 		render.Status(context, render.StatusInvalidArgument)
 		return
 	}
@@ -132,10 +132,10 @@ func (w *Worker) judgeUpdate(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) eventList(context *gin.Context) {
+func (w *Worker) processEventList(context *gin.Context) {
 	request := struct {
-		Limit  *int `json:"limit" binding:"number"`
-		Offset *int `json:"offset" binding:"number"`
+		Limit  int `json:"limit" binding:"number"`
+		Offset int `json:"offset" binding:"number"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -143,7 +143,7 @@ func (w *Worker) eventList(context *gin.Context) {
 		return
 	}
 
-	events, err := w.queryLimitOffset(*request.Limit, *request.Offset)
+	events, err := w.queryLimitOffset(request.Limit, request.Offset)
 	if err != nil {
 		render.Status(context, render.StatusQueryProcessEventFailed)
 		return
@@ -189,7 +189,7 @@ func setUntrustedCmd(cmd string) (err error) {
 	return
 }
 
-func (w *Worker) eventUpdate(context *gin.Context) {
+func (w *Worker) processEventUpdate(context *gin.Context) {
 	request := struct {
 		ID     int `json:"id" binding:"number"`
 		Status int `json:"status" binding:"number"`
@@ -207,7 +207,7 @@ func (w *Worker) eventUpdate(context *gin.Context) {
 	}
 
 	switch request.Status {
-	case status.ProcessTrusted:
+	case process.StatusTrusted:
 		err = setTrustedCmd(cmd)
 	default:
 		err = setUntrustedCmd(cmd)
@@ -224,4 +224,9 @@ func (w *Worker) eventUpdate(context *gin.Context) {
 		return
 	}
 	render.Status(context, render.StatusSuccess)
+}
+
+// TODO: 补充进程事件删除功能
+func (w *Worker) processEventDelete(context *gin.Context) {
+	render.Status(context, render.StatusUnknownError)
 }

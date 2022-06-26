@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"uranus/internal/web/control"
+	"uranus/internal/web/file"
 	"uranus/internal/web/process"
 	"uranus/internal/web/user"
 
@@ -50,6 +51,10 @@ func (w *WebWorker) Start() (err error) {
 	}
 
 	if err = process.Init(engine, w.dbName); err != nil {
+		return
+	}
+
+	if err = file.Init(engine, w.dbName); err != nil {
 		return
 	}
 

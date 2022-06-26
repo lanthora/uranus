@@ -8,6 +8,23 @@ import (
 	"uranus/pkg/connector"
 )
 
+const (
+	StatusDisable = 0
+	StatusEnable  = 1
+)
+
+const (
+	StatusJudgeDisable = 0
+	StatusJudgeAudit   = 1
+	StatusJudgeProtect = 2
+)
+
+const (
+	StatusPending   = 0
+	StatusUntrusted = 1
+	StatusTrusted   = 2
+)
+
 func SplitCmd(cmd string) (workdir string, binary string, argv string) {
 	raw := strings.Split(cmd, "\u001f")
 	workdir = raw[0]
@@ -20,7 +37,6 @@ func SplitCmd(cmd string) (workdir string, binary string, argv string) {
 }
 
 func ProcessJudgeUpdate(judge int) bool {
-	// 参数组装成底层命令
 	request := map[string]interface{}{
 		"type":  "user::proc::judge",
 		"judge": judge,
@@ -31,13 +47,11 @@ func ProcessJudgeUpdate(judge int) bool {
 		return false
 	}
 
-	// 转换成字符串向底层发送命令,并接收响应的字符串
 	responseStr, err := connector.Exec(string(bytes), time.Second)
 	if err != nil {
 		return false
 	}
 
-	// 底层返回的字符串转换后返回给前端
 	response := struct {
 		Code  int         `json:"code" binding:"required"`
 		Extra interface{} `json:"extra"`

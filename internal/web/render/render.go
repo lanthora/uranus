@@ -23,6 +23,17 @@ const (
 	StatusQueryProcessEventFailed        = 12
 	StatusProcessEnableFailed            = 13
 	StatusProcessDisableFailed           = 14
+	StatusAddFilePolicyConflict          = 15
+	StatusAddFilePolicyFileNotExist      = 16
+	StatusAddFilePolicyFailed            = 17
+	StatusDeleteFilePolicyFailed         = 18
+	StatusQueryFilePolicyListFailed      = 19
+	StatusQueryFilePolicyByIdFailed      = 20
+	StatusQueryFileEventListFailed       = 21
+	StatusDeleteFileEventFailed          = 22
+	StatusUpdateFilePolicyConflict       = 23
+	StatusUpdateFilePolicyFileNotExist   = 24
+	StatusUpdateFilePolicyFailed         = 25
 )
 
 var messages = [...]string{
@@ -41,6 +52,17 @@ var messages = [...]string{
 	StatusQueryProcessEventFailed:        "query process event failed",
 	StatusProcessEnableFailed:            "process enable failed",
 	StatusProcessDisableFailed:           "process disable failed",
+	StatusAddFilePolicyConflict:          "add file policy conflict",
+	StatusAddFilePolicyFileNotExist:      "add file policy file not exist",
+	StatusAddFilePolicyFailed:            "add file policy failed",
+	StatusDeleteFilePolicyFailed:         "delete file policy failed",
+	StatusQueryFilePolicyListFailed:      "query file policy list failed",
+	StatusQueryFilePolicyByIdFailed:      "query file policy by id failed",
+	StatusQueryFileEventListFailed:       "query file event list failed",
+	StatusDeleteFileEventFailed:          "delete file event failed",
+	StatusUpdateFilePolicyConflict:       "update file policy conflict",
+	StatusUpdateFilePolicyFileNotExist:   "update file policy file not exist",
+	StatusUpdateFilePolicyFailed:         "update file policy failed",
 }
 
 func Success(context *gin.Context, data interface{}) {

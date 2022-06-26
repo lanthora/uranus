@@ -19,7 +19,7 @@ func Init(engine *gin.Engine, dbName string) (err error) {
 func echo(context *gin.Context) {
 	// 获取前端请求的参数
 	request := struct {
-		Extra interface{} `json:"extra" binding:"required"`
+		Extra interface{} `json:"extra"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
