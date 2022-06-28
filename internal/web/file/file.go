@@ -70,12 +70,12 @@ func (w *Worker) fileCoreEnable(context *gin.Context) {
 
 func (w *Worker) fileCoreDisable(context *gin.Context) {
 	if err := w.config.SetInteger("file::core::status", file.StatusDisable); err != nil {
-		render.Status(context, render.StatusProcessDisableFailed)
+		render.Status(context, render.StatusFileDisableFailed)
 		return
 	}
 	ok := file.FileDisable()
 	if !ok {
-		render.Status(context, render.StatusProcessDisableFailed)
+		render.Status(context, render.StatusFileDisableFailed)
 		return
 	}
 	render.Status(context, render.StatusSuccess)
