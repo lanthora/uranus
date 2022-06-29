@@ -28,19 +28,19 @@ func main() {
 	}
 
 	listen := config.GetString("listen")
-	dbName := config.GetString("db")
+	dataSourceName := config.GetString("dsn")
 
-	processWorker := background.NewProcessWorker(dbName)
+	processWorker := background.NewProcessWorker(dataSourceName)
 	if err := processWorker.Start(); err != nil {
 		logrus.Fatal(err)
 	}
 
-	fileWorker := background.NewFileWorker(dbName)
+	fileWorker := background.NewFileWorker(dataSourceName)
 	if err := fileWorker.Start(); err != nil {
 		logrus.Fatal(err)
 	}
 
-	webWorker := web.NewWorker(listen, dbName)
+	webWorker := web.NewWorker(listen, dataSourceName)
 	if err := webWorker.Start(); err != nil {
 		logrus.Fatal(err)
 	}

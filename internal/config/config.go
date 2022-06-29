@@ -23,15 +23,15 @@ var (
 )
 
 type Config struct {
-	dbName string
+	dataSourceName string
 }
 
-func New(dbName string) (c *Config, err error) {
+func New(dataSourceName string) (c *Config, err error) {
 	c = &Config{
-		dbName: dbName,
+		dataSourceName: dataSourceName,
 	}
-	os.MkdirAll(filepath.Dir(c.dbName), os.ModeDir)
-	db, err := sql.Open("sqlite3", c.dbName)
+	os.MkdirAll(filepath.Dir(c.dataSourceName), os.ModeDir)
+	db, err := sql.Open("sqlite3", c.dataSourceName)
 	if err != nil {
 		return
 	}
@@ -46,7 +46,7 @@ func New(dbName string) (c *Config, err error) {
 
 func (c *Config) SetInteger(key string, value int) (err error) {
 
-	db, err := sql.Open("sqlite3", c.dbName)
+	db, err := sql.Open("sqlite3", c.dataSourceName)
 	if err != nil {
 		return
 	}
@@ -80,7 +80,7 @@ func (c *Config) SetInteger(key string, value int) (err error) {
 }
 
 func (c *Config) GetInteger(key string) (value int, err error) {
-	db, err := sql.Open("sqlite3", c.dbName)
+	db, err := sql.Open("sqlite3", c.dataSourceName)
 	if err != nil {
 		return
 	}
@@ -97,7 +97,7 @@ func (c *Config) GetInteger(key string) (value int, err error) {
 
 func (c *Config) SetReal(key string, value float64) (err error) {
 
-	db, err := sql.Open("sqlite3", c.dbName)
+	db, err := sql.Open("sqlite3", c.dataSourceName)
 	if err != nil {
 		return
 	}
@@ -131,7 +131,7 @@ func (c *Config) SetReal(key string, value float64) (err error) {
 }
 
 func (c *Config) GetReal(key string) (value float64, err error) {
-	db, err := sql.Open("sqlite3", c.dbName)
+	db, err := sql.Open("sqlite3", c.dataSourceName)
 	if err != nil {
 		return
 	}
@@ -148,7 +148,7 @@ func (c *Config) GetReal(key string) (value float64, err error) {
 
 func (c *Config) SetText(key string, value string) (err error) {
 
-	db, err := sql.Open("sqlite3", c.dbName)
+	db, err := sql.Open("sqlite3", c.dataSourceName)
 	if err != nil {
 		return
 	}
@@ -182,7 +182,7 @@ func (c *Config) SetText(key string, value string) (err error) {
 }
 
 func (c *Config) GetText(key string) (value string, err error) {
-	db, err := sql.Open("sqlite3", c.dbName)
+	db, err := sql.Open("sqlite3", c.dataSourceName)
 	if err != nil {
 		return
 	}

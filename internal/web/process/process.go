@@ -14,8 +14,8 @@ import (
 )
 
 type Worker struct {
-	engine *gin.Engine
-	dbName string
+	engine         *gin.Engine
+	dataSourceName string
 
 	config *config.Config
 }
@@ -30,15 +30,15 @@ type Event struct {
 	Status  uint64 `json:"status" binding:"required"`
 }
 
-func Init(engine *gin.Engine, dbName string) (err error) {
-	config, err := config.New(dbName)
+func Init(engine *gin.Engine, dataSourceName string) (err error) {
+	config, err := config.New(dataSourceName)
 	if err != nil {
 		return
 	}
 	w := &Worker{
-		engine: engine,
-		dbName: dbName,
-		config: config,
+		engine:         engine,
+		dataSourceName: dataSourceName,
+		config:         config,
 	}
 	w.engine.POST("/process/core/status", w.processCoreStatus)
 	w.engine.POST("/process/core/enable", w.processCoreEnable)

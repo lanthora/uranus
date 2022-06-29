@@ -10,21 +10,21 @@ import (
 )
 
 type Worker struct {
-	engine *gin.Engine
-	dbName string
+	engine         *gin.Engine
+	dataSourceName string
 
 	config *config.Config
 }
 
-func Init(engine *gin.Engine, dbName string) (err error) {
-	config, err := config.New(dbName)
+func Init(engine *gin.Engine, dataSourceName string) (err error) {
+	config, err := config.New(dataSourceName)
 	if err != nil {
 		return
 	}
 	w := &Worker{
-		engine: engine,
-		dbName: dbName,
-		config: config,
+		engine:         engine,
+		dataSourceName: dataSourceName,
+		config:         config,
 	}
 	w.engine.POST("/file/core/status", w.fileCoreStatus)
 	w.engine.POST("/file/core/enable", w.fileCoreEnable)
