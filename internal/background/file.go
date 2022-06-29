@@ -35,6 +35,7 @@ type FileWorker struct {
 	wg      sync.WaitGroup
 	conn    connector.Connector
 	config  *config.Config
+	dog     *watchdog.Watchdog
 }
 
 func NewFileWorker(dbName string) *FileWorker {
@@ -117,9 +118,36 @@ func (w *FileWorker) Stop() (err error) {
 	return
 }
 
+func (w *FileWorker) handleMsg(msg string) {
+	event := struct {
+		Type string `json:"type"`
+		Path string `json:"name"`
+		Fsid uint64 `json:"fsid"`
+		Ino  uint64 `json:"ino"`
+		Perm int    `json:"perm"`
+	}{}
+
+	err := json.Unmarshal([]byte(msg), &event)
+	if err != nil {
+		logrus.Error(err)
+		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+		return
+	}
+	switch event.Type {
+	case "kernel::file::report":
+		err = w.handleFileEvent(event.Path, event.Fsid, event.Ino, event.Perm)
+		if err != nil {
+			logrus.Error(err)
+			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+		}
+	case "osinfo::report":
+		w.dog.Kick()
+	}
+}
+
 func (w *FileWorker) run() {
 	defer w.wg.Done()
-	dog := watchdog.New(10*time.Second, func() {
+	w.dog = watchdog.New(10*time.Second, func() {
 		logrus.Error("osinfo::report timeout")
 		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 	})
@@ -135,31 +163,8 @@ func (w *FileWorker) run() {
 			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 			continue
 		}
+		go w.handleMsg(msg)
 
-		event := struct {
-			Type string `json:"type"`
-			Path string `json:"name"`
-			Fsid uint64 `json:"fsid"`
-			Ino  uint64 `json:"ino"`
-			Perm int    `json:"perm"`
-		}{}
-
-		err = json.Unmarshal([]byte(msg), &event)
-		if err != nil {
-			logrus.Error(err)
-			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-			continue
-		}
-		switch event.Type {
-		case "kernel::file::report":
-			err = w.handleFileEvent(event.Path, event.Fsid, event.Ino, event.Perm)
-			if err != nil {
-				logrus.Error(err)
-				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-			}
-		case "osinfo::report":
-			dog.Kick()
-		}
 	}
 }
 

@@ -33,6 +33,7 @@ type ProcessWorker struct {
 	wg      sync.WaitGroup
 	conn    connector.Connector
 	config  *config.Config
+	dog     *watchdog.Watchdog
 }
 
 func NewProcessWorker(dbName string) *ProcessWorker {
@@ -149,9 +150,34 @@ func (w *ProcessWorker) updateCmd(cmd string, judge int) (err error) {
 	return
 }
 
+func (w *ProcessWorker) handleMsg(msg string) {
+	event := struct {
+		Type  string `json:"type"`
+		Cmd   string `json:"cmd"`
+		Judge int    `json:"judge"`
+	}{}
+
+	err := json.Unmarshal([]byte(msg), &event)
+	if err != nil {
+		logrus.Error(err)
+		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+		return
+	}
+	switch event.Type {
+	case "audit::proc::report":
+		err = w.updateCmd(event.Cmd, event.Judge)
+		if err != nil {
+			logrus.Error(err)
+			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+		}
+	case "osinfo::report":
+		w.dog.Kick()
+	}
+}
+
 func (w *ProcessWorker) run() {
 	defer w.wg.Done()
-	dog := watchdog.New(10*time.Second, func() {
+	w.dog = watchdog.New(10*time.Second, func() {
 		logrus.Error("osinfo::report timeout")
 		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 	})
@@ -168,28 +194,7 @@ func (w *ProcessWorker) run() {
 			continue
 		}
 
-		event := struct {
-			Type  string `json:"type"`
-			Cmd   string `json:"cmd"`
-			Judge int    `json:"judge"`
-		}{}
-
-		err = json.Unmarshal([]byte(msg), &event)
-		if err != nil {
-			logrus.Error(err)
-			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-			continue
-		}
-		switch event.Type {
-		case "audit::proc::report":
-			err = w.updateCmd(event.Cmd, event.Judge)
-			if err != nil {
-				logrus.Error(err)
-				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-			}
-		case "osinfo::report":
-			dog.Kick()
-		}
+		go w.handleMsg(msg)
 	}
 }
 
