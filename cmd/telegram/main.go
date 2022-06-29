@@ -29,10 +29,10 @@ func main() {
 
 	token := config.GetString("token")
 	ownerID := config.GetInt64("id")
-	dbName := config.GetString("db")
+	dataSourceName := config.GetString("dsn")
 
 	telegramWorker := telegram.NewWorker(token, ownerID)
-	processWorker := background.NewProcessWorker(dbName)
+	processWorker := background.NewProcessWorker(dataSourceName)
 
 	if err := telegramWorker.Start(); err != nil {
 		logrus.Fatal(err)

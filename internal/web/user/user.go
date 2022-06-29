@@ -13,14 +13,14 @@ import (
 )
 
 type Worker struct {
-	engine *gin.Engine
-	dbName string
+	engine         *gin.Engine
+	dataSourceName string
 
 	onlineUserMax int
 	loggedUser    *lru.Cache
 }
 
-func Init(engine *gin.Engine, dbName string) (err error) {
+func Init(engine *gin.Engine, dataSourceName string) (err error) {
 	onlineUserMax := 10
 	loggedUser, err := lru.New(onlineUserMax)
 	if err != nil {
@@ -28,10 +28,10 @@ func Init(engine *gin.Engine, dbName string) (err error) {
 	}
 
 	w := &Worker{
-		loggedUser:    loggedUser,
-		onlineUserMax: onlineUserMax,
-		engine:        engine,
-		dbName:        dbName,
+		loggedUser:     loggedUser,
+		onlineUserMax:  onlineUserMax,
+		engine:         engine,
+		dataSourceName: dataSourceName,
 	}
 
 	w.engine.Use(w.middleware())

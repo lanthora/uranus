@@ -3,6 +3,8 @@ package process
 
 import (
 	"database/sql"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -12,19 +14,22 @@ const (
 )
 
 func (w *Worker) queryLimitOffset(limit, offset int) (events []Event, err error) {
-	db, err := sql.Open("sqlite3", w.dbName)
+	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(sqlQueryProcessLimitOffset)
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 	defer stmt.Close()
 	rows, err := stmt.Query(limit, offset)
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 	defer rows.Close()
@@ -32,46 +37,56 @@ func (w *Worker) queryLimitOffset(limit, offset int) (events []Event, err error)
 		e := Event{}
 		err = rows.Scan(&e.ID, &e.Workdir, &e.Binary, &e.Argv, &e.Count, &e.Judge, &e.Status)
 		if err != nil {
+			logrus.Error(err)
 			return
 		}
 		events = append(events, e)
 	}
 	err = rows.Err()
+	if err != nil {
+		logrus.Error(err)
+	}
 	return
 }
 
 func (w *Worker) updateStatus(id uint64, status int) bool {
-	db, err := sql.Open("sqlite3", w.dbName)
+	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
+		logrus.Error(err)
 		return false
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(sqlUpdateProcessStatus)
 	if err != nil {
+		logrus.Error(err)
 		return false
 	}
 	defer stmt.Close()
 
 	result, err := stmt.Exec(status, id)
 	if err != nil {
+		logrus.Error(err)
 		return false
 	}
 	affected, err := result.RowsAffected()
 	if err != nil {
+		logrus.Error(err)
 		return false
 	}
 	return affected == 1
 }
 
 func (w *Worker) queryCmdById(id int) (cmd string, err error) {
-	db, err := sql.Open("sqlite3", w.dbName)
+	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 	defer db.Close()
 	stmt, err := db.Prepare(sqlQueryProcessCmdById)
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 	defer stmt.Close()

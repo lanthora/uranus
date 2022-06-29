@@ -24,8 +24,8 @@ const (
 )
 
 func (w *Worker) initUserTable() (err error) {
-	os.MkdirAll(filepath.Dir(w.dbName), os.ModeDir)
-	db, err := sql.Open("sqlite3", w.dbName)
+	os.MkdirAll(filepath.Dir(w.dataSourceName), os.ModeDir)
+	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
 		return
 	}
@@ -39,7 +39,7 @@ func (w *Worker) initUserTable() (err error) {
 }
 
 func (w *Worker) noUser() bool {
-	db, err := sql.Open("sqlite3", w.dbName)
+	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
 		return false
 	}
@@ -62,7 +62,7 @@ func (w *Worker) createUser(username, password, alias, permissions string) (err 
 	sum := sha256.Sum256([]byte(salt + password))
 	hash := hex.EncodeToString(sum[:])
 
-	db, err := sql.Open("sqlite3", w.dbName)
+	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
 		return
 	}
@@ -83,7 +83,7 @@ func (w *Worker) createUser(username, password, alias, permissions string) (err 
 }
 
 func (w *Worker) checkUserPassword(username, password string) (ok bool, err error) {
-	db, err := sql.Open("sqlite3", w.dbName)
+	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
 		return
 	}
@@ -105,7 +105,7 @@ func (w *Worker) checkUserPassword(username, password string) (ok bool, err erro
 
 func (w *Worker) queryUserByUsername(username string) (user User, err error) {
 	user.Username = username
-	db, err := sql.Open("sqlite3", w.dbName)
+	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
 		return
 	}
@@ -123,7 +123,7 @@ func (w *Worker) queryUserByUsername(username string) (user User, err error) {
 }
 
 func (w *Worker) queryAllUser() (users []User, err error) {
-	db, err := sql.Open("sqlite3", w.dbName)
+	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
 		return
 	}
@@ -155,7 +155,7 @@ func (w *Worker) queryAllUser() (users []User, err error) {
 }
 
 func (w *Worker) updateUserInfo(id uint64, username, password, alias, permissions string) bool {
-	db, err := sql.Open("sqlite3", w.dbName)
+	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
 		return false
 	}
@@ -183,7 +183,7 @@ func (w *Worker) updateUserInfo(id uint64, username, password, alias, permission
 }
 
 func (w *Worker) deleteUser(id uint64) bool {
-	db, err := sql.Open("sqlite3", w.dbName)
+	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
 		return false
 	}

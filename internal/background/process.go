@@ -27,7 +27,7 @@ const (
 )
 
 type ProcessWorker struct {
-	dbName string
+	dataSourceName string
 
 	running bool
 	wg      sync.WaitGroup
@@ -36,33 +36,37 @@ type ProcessWorker struct {
 	dog     *watchdog.Watchdog
 }
 
-func NewProcessWorker(dbName string) *ProcessWorker {
+func NewProcessWorker(dataSourceName string) *ProcessWorker {
 	worker := ProcessWorker{
-		dbName: dbName,
+		dataSourceName: dataSourceName,
 	}
 	return &worker
 }
 
 func (w *ProcessWorker) initDB() (err error) {
-	os.MkdirAll(filepath.Dir(w.dbName), os.ModeDir)
-	db, err := sql.Open("sqlite3", w.dbName)
+	os.MkdirAll(filepath.Dir(w.dataSourceName), os.ModeDir)
+	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 	defer db.Close()
 
 	_, err = db.Exec(sqlCreateProcessTable)
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 
 	_, err = db.Exec(sqlCreateProcessCmdIndex)
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 
-	w.config, err = config.New(w.dbName)
+	w.config, err = config.New(w.dataSourceName)
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 	return
@@ -85,19 +89,22 @@ func (w *ProcessWorker) setTrustedCmd(cmd string) (err error) {
 }
 
 func (w *ProcessWorker) initTrustedCmd() (err error) {
-	db, err := sql.Open("sqlite3", w.dbName)
+	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(sqlQueryAllowedProcesses)
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 	defer stmt.Close()
 	rows, err := stmt.Query()
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 	defer rows.Close()
@@ -111,40 +118,51 @@ func (w *ProcessWorker) initTrustedCmd() (err error) {
 	}
 	err = rows.Err()
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 	return
 }
 
 func (w *ProcessWorker) updateCmd(cmd string, judge int) (err error) {
-	db, err := sql.Open("sqlite3", w.dbName)
+	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(sqlUpdateProcessCount)
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 	defer stmt.Close()
 	result, err := stmt.Exec(judge, cmd)
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 	affected, err := result.RowsAffected()
-	if err != nil || affected != 0 {
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	if affected != 0 {
 		return
 	}
 
 	stmt, err = db.Prepare(sqlInsertProcessEvent)
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 	defer stmt.Close()
 	workdir, binary, argv := process.SplitCmd(cmd)
 	_, err = stmt.Exec(cmd, workdir, binary, argv, judge)
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
 	return
@@ -168,7 +186,6 @@ func (w *ProcessWorker) handleMsg(msg string) {
 		err = w.updateCmd(event.Cmd, event.Judge)
 		if err != nil {
 			logrus.Error(err)
-			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		}
 	case "osinfo::report":
 		w.dog.Kick()

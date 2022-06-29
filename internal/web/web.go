@@ -18,16 +18,16 @@ import (
 )
 
 type WebWorker struct {
-	addr   string
-	server *http.Server
-	wg     sync.WaitGroup
-	dbName string
+	addr           string
+	server         *http.Server
+	wg             sync.WaitGroup
+	dataSourceName string
 }
 
-func NewWorker(addr string, dbName string) *WebWorker {
+func NewWorker(addr string, dataSourceName string) *WebWorker {
 	w := WebWorker{
-		addr:   addr,
-		dbName: dbName,
+		addr:           addr,
+		dataSourceName: dataSourceName,
 	}
 	return &w
 }
@@ -46,19 +46,19 @@ func (w *WebWorker) Start() (err error) {
 	engine := gin.New()
 	engine.GET("/*filename", front)
 
-	if err = user.Init(engine, w.dbName); err != nil {
+	if err = user.Init(engine, w.dataSourceName); err != nil {
 		return
 	}
 
-	if err = process.Init(engine, w.dbName); err != nil {
+	if err = process.Init(engine, w.dataSourceName); err != nil {
 		return
 	}
 
-	if err = file.Init(engine, w.dbName); err != nil {
+	if err = file.Init(engine, w.dataSourceName); err != nil {
 		return
 	}
 
-	control.Init(engine, w.dbName)
+	control.Init(engine, w.dataSourceName)
 
 	w.server = &http.Server{
 		Addr:    w.addr,
