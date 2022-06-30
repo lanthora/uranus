@@ -14,7 +14,7 @@ Uranus 的存在就是为了解决 hackernel 遗留下的问题:
 
 ## 构建
 
-本项目依赖 [hackernel](https://github.com/lanthora/hackernel)
+本项目依赖 [hackernel](https://github.com/freshdom/hackernel)
 提供的 Unix Domain Socket 接口,请先根据文档部署 hackernel.
 
 ```bash

@@ -6,7 +6,7 @@
 其他任何的远程代码仓库同理.
 
 1. Git 项目同步到本地
-2. 设置本项目(`https://github.com/lanthora/uranus.git`) 为 upstream
+2. 设置本项目(`https://github.com/freshdom/uranus.git`) 为 upstream
 3. 设置自己项目(`https://github.com/username/uranus.git`)为 origin
 4. upstream 代码同步到本地 master 分支,同时本地代码同步到 origin
 5. 在 master 分支 checkout 功能分支
@@ -26,7 +26,7 @@
 此时只需要添加一个名为 upstream 的 remote 即可.大纲中的步骤 2.
 
 ```bash
-git remote add upstream https://github.com/lanthora/uranus.git
+git remote add upstream https://github.com/freshdom/uranus.git
 ```
 
 如果你没有在自己账号下 clone, 或者不是 Github 用户.
@@ -37,9 +37,9 @@ git remote add upstream https://github.com/lanthora/uranus.git
 
 ```bash
 # 步骤 1
-git clone https://github.com/lanthora/uranus.git
+git clone https://github.com/freshdom/uranus.git
 # 步骤 2
-git remote add upstream https://github.com/lanthora/uranus.git
+git remote add upstream https://github.com/freshdom/uranus.git
 # 步骤 3
 git remote set-url origin git@github.com:username/uranus.git
 ```
