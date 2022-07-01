@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	sqlCreateFilePolicyTable       = `create table if not exists file_policy(id integer primary key autoincrement, path text not null, fsid integer, ino integer, perm integer not null, timestamp integer not null, status integer not null)`
-	sqlCreateFileEventTable        = `create table if not exists file_event(id integer primary key autoincrement, path text not null, fsid integer, ino integer, perm integer not null, timestamp integer not null, policy integer not null)`
+	sqlCreateFilePolicyTable       = `create table if not exists file_policy(id integer primary key autoincrement, path text not null, fsid blob, ino blob, perm integer not null, timestamp integer not null, status integer not null)`
+	sqlCreateFileEventTable        = `create table if not exists file_event(id integer primary key autoincrement, path text not null, fsid blob, ino blob, perm integer not null, timestamp integer not null, policy integer not null)`
 	sqlQueryFilePolicy             = `select id,path,fsid,ino,perm from file_policy`
 	sqlUpdateFilePolicyFsidInoById = `update file_policy set fsid=?,ino=?,timestamp=? where id=?`
 	sqlUpdateFilePolicyStatusById  = `update file_policy set status=? where id=?`
