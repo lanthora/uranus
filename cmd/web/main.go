@@ -31,11 +31,20 @@ func main() {
 	dataSourceName := config.GetString("dsn")
 
 	processWorker := background.NewProcessWorker(dataSourceName)
+	fileWorker := background.NewFileWorker(dataSourceName)
+
+	if err := processWorker.Init(); err != nil {
+		logrus.Fatal(err)
+	}
+
+	if err := fileWorker.Init(); err != nil {
+		logrus.Fatal(err)
+	}
+
 	if err := processWorker.Start(); err != nil {
 		logrus.Fatal(err)
 	}
 
-	fileWorker := background.NewFileWorker(dataSourceName)
 	if err := fileWorker.Start(); err != nil {
 		logrus.Fatal(err)
 	}

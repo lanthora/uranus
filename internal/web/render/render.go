@@ -37,6 +37,7 @@ const (
 	StatusFileEnableFailed               = 26
 	StatusFileDisableFailed              = 27
 	StatusProcessAutoTrustFailed         = 28
+	StatusProcessGetAutoStatusFailed     = 29
 )
 
 var messages = [...]string{
@@ -69,6 +70,7 @@ var messages = [...]string{
 	StatusFileEnableFailed:               "file enable failed",
 	StatusFileDisableFailed:              "file disable failed",
 	StatusProcessAutoTrustFailed:         "process auto trust failed",
+	StatusProcessGetAutoStatusFailed:     "process get auto status failed",
 }
 
 func Success(context *gin.Context, data interface{}) {

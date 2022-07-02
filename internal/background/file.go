@@ -4,6 +4,7 @@ package background
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"sync"
@@ -44,8 +45,7 @@ func NewFileWorker(dataSourceName string) *FileWorker {
 	}
 	return &worker
 }
-
-func (w *FileWorker) Start() (err error) {
+func (w *FileWorker) Init() (err error) {
 	w.running = true
 	err = w.conn.Connect()
 	if err != nil {
@@ -76,12 +76,15 @@ func (w *FileWorker) Start() (err error) {
 
 	coreStatus, tmpErr := w.config.GetInteger("file::core::status")
 	if tmpErr == nil && coreStatus == file.StatusEnable {
-		if err = w.conn.Send(`{"type":"user::file::enable"}`); err != nil {
+		if ok := file.FileEnable(); !ok {
+			err = errors.New("file protection enable failed")
 			logrus.Error(err)
 			return
 		}
 	}
-
+	return
+}
+func (w *FileWorker) Start() (err error) {
 	w.wg.Add(1)
 	go w.run()
 	return
@@ -97,13 +100,13 @@ func (w *FileWorker) Stop() (err error) {
 		return
 	}
 
-	err = w.conn.Send(`{"type":"user::file::disable"}`)
-	if err != nil {
+	if ok := file.FileDisable(); !ok {
+		logrus.Error("file protection disable failed")
 		return
 	}
 
-	err = w.conn.Send(`{"type":"user::file::clear"}`)
-	if err != nil {
+	if ok := file.FileClear(); !ok {
+		logrus.Error("file protection clear failed")
 		return
 	}
 
