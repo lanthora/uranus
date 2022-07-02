@@ -48,6 +48,7 @@ func Init(engine *gin.Engine, dataSourceName string) (err error) {
 	w.engine.POST("/process/event/list", w.processEventList)
 	w.engine.POST("/process/event/update", w.processEventUpdate)
 	w.engine.POST("/process/event/delete", w.processEventDelete)
+	w.engine.POST("/process/auto/trust", w.processAutoTrust)
 	return
 }
 
@@ -91,7 +92,7 @@ func (w *Worker) processCoreDisable(context *gin.Context) {
 }
 
 func (w *Worker) processJudgeStatus(context *gin.Context) {
-	judge, err := w.config.GetInteger("proc::core::status")
+	judge, err := w.config.GetInteger("proc::judge::status")
 	if err != nil {
 		judge = process.StatusJudgeDisable
 	}
@@ -115,7 +116,7 @@ func (w *Worker) processJudgeUpdate(context *gin.Context) {
 		return
 	}
 
-	if request.Judge < process.StatusJudgeDisable || request.Judge > process.StatusJudgeProtect {
+	if request.Judge < process.StatusJudgeDisable || request.Judge > process.StatusJudgeDefense {
 		render.Status(context, render.StatusInvalidArgument)
 		return
 	}
@@ -229,4 +230,19 @@ func (w *Worker) processEventUpdate(context *gin.Context) {
 // TODO: 补充进程事件删除功能
 func (w *Worker) processEventDelete(context *gin.Context) {
 	render.Status(context, render.StatusUnknownError)
+}
+
+func (w *Worker) processAutoTrust(context *gin.Context) {
+	request := struct {
+		Status int `json:"status" binding:"number"`
+	}{}
+	if err := context.ShouldBindJSON(&request); err != nil {
+		render.Status(context, render.StatusInvalidArgument)
+		return
+	}
+	if err := w.config.SetInteger("proc::auto::trust", request.Status); err != nil {
+		render.Status(context, render.StatusProcessAutoTrustFailed)
+		return
+	}
+	render.Status(context, render.StatusSuccess)
 }
