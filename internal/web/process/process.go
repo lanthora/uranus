@@ -2,15 +2,11 @@
 package process
 
 import (
-	"encoding/json"
-	"time"
 	"uranus/internal/config"
 	"uranus/internal/web/render"
-	"uranus/pkg/connector"
 	"uranus/pkg/process"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 type Worker struct {
@@ -49,6 +45,7 @@ func Init(engine *gin.Engine, dataSourceName string) (err error) {
 	w.engine.POST("/process/event/update", w.processEventUpdate)
 	w.engine.POST("/process/event/delete", w.processEventDelete)
 	w.engine.POST("/process/auto/trust", w.processAutoTrust)
+	w.engine.POST("/process/auto/status", w.processAutoStatus)
 	return
 }
 
@@ -152,44 +149,6 @@ func (w *Worker) processEventList(context *gin.Context) {
 	render.Success(context, events)
 }
 
-func setTrustedCmd(cmd string) (err error) {
-	data := map[string]string{
-		"type": "user::proc::trusted::insert",
-		"cmd":  cmd,
-	}
-	b, err := json.Marshal(data)
-	if err != nil {
-		return
-	}
-
-	// TODO: 更细致的判断是否执行成功
-	_, err = connector.Exec(string(b), time.Second)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	return
-}
-
-func setUntrustedCmd(cmd string) (err error) {
-	data := map[string]string{
-		"type": "user::proc::trusted::delete",
-		"cmd":  cmd,
-	}
-	b, err := json.Marshal(data)
-	if err != nil {
-		return
-	}
-
-	// TODO: 更细致的判断是否执行成功
-	_, err = connector.Exec(string(b), time.Second)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	return
-}
-
 func (w *Worker) processEventUpdate(context *gin.Context) {
 	request := struct {
 		ID     int `json:"id" binding:"number"`
@@ -209,9 +168,9 @@ func (w *Worker) processEventUpdate(context *gin.Context) {
 
 	switch request.Status {
 	case process.StatusTrusted:
-		err = setTrustedCmd(cmd)
+		err = process.SetTrustedCmd(cmd)
 	default:
-		err = setUntrustedCmd(cmd)
+		err = process.SetUntrustedCmd(cmd)
 	}
 
 	if err != nil {
@@ -245,4 +204,18 @@ func (w *Worker) processAutoTrust(context *gin.Context) {
 		return
 	}
 	render.Status(context, render.StatusSuccess)
+}
+
+func (w *Worker) processAutoStatus(context *gin.Context) {
+	status, err := w.config.GetInteger("proc::auto::trust")
+	if err != nil {
+		render.Status(context, render.StatusProcessGetAutoStatusFailed)
+		return
+	}
+	response := struct {
+		Status int `json:"status" binding:"number"`
+	}{
+		Status: status,
+	}
+	render.Success(context, response)
 }

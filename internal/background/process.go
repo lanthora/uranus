@@ -73,22 +73,6 @@ func (w *ProcessWorker) initDB() (err error) {
 	return
 }
 
-func (w *ProcessWorker) setTrustedCmd(cmd string) (err error) {
-	data := map[string]string{
-		"type": "user::proc::trusted::insert",
-		"cmd":  cmd,
-	}
-	b, err := json.Marshal(data)
-	if err != nil {
-		return
-	}
-	err = w.conn.Send(string(b))
-	if err != nil {
-		return
-	}
-	return
-}
-
 func (w *ProcessWorker) initTrustedCmd() (err error) {
 	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
@@ -115,7 +99,7 @@ func (w *ProcessWorker) initTrustedCmd() (err error) {
 		if err != nil {
 			return
 		}
-		w.setTrustedCmd(cmd)
+		process.SetTrustedCmd(cmd)
 	}
 	err = rows.Err()
 	if err != nil {
@@ -131,7 +115,7 @@ func (w *ProcessWorker) updateCmd(cmd string, judge int) (err error) {
 		status = process.StatusPending
 	}
 	if status == process.StatusTrusted && judge != process.StatusJudgeDefense {
-		w.setTrustedCmd(cmd)
+		process.SetTrustedCmd(cmd)
 	}
 	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
@@ -222,8 +206,7 @@ func (w *ProcessWorker) run() {
 		go w.handleMsg(msg)
 	}
 }
-
-func (w *ProcessWorker) Start() (err error) {
+func (w *ProcessWorker) Init() (err error) {
 	w.running = true
 	err = w.conn.Connect()
 	if err != nil {
@@ -265,7 +248,10 @@ func (w *ProcessWorker) Start() (err error) {
 	if err != nil {
 		return
 	}
+	return
+}
 
+func (w *ProcessWorker) Start() (err error) {
 	w.wg.Add(1)
 	go w.run()
 	return
@@ -281,13 +267,13 @@ func (w *ProcessWorker) Stop() (err error) {
 		return
 	}
 
-	err = w.conn.Send(`{"type":"user::proc::disable"}`)
-	if err != nil {
+	if ok := process.ProcessDisable(); !ok {
+		logrus.Error("process protection disable failed")
 		return
 	}
 
-	err = w.conn.Send(`{"type":"user::proc::trusted::clear"}`)
-	if err != nil {
+	if ok := process.ProcessClear(); !ok {
+		logrus.Error("process protection clear failed")
 		return
 	}
 

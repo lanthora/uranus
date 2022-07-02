@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 	"uranus/pkg/connector"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -92,4 +94,58 @@ func ProcessDisable() bool {
 		return false
 	}
 	return response.Code == 0
+}
+
+func ProcessClear() bool {
+	responseStr, err := connector.Exec(`{"type":"user::proc::trusted::clear"}`, time.Second)
+	if err != nil {
+		return false
+	}
+
+	response := struct {
+		Code  int         `json:"code" binding:"required"`
+		Extra interface{} `json:"extra"`
+	}{}
+	if err := json.Unmarshal([]byte(responseStr), &response); err != nil {
+		return false
+	}
+	return response.Code == 0
+}
+
+func SetTrustedCmd(cmd string) (err error) {
+	data := map[string]string{
+		"type": "user::proc::trusted::insert",
+		"cmd":  cmd,
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		return
+	}
+
+	// TODO: 更细致的判断是否执行成功
+	_, err = connector.Exec(string(b), time.Second)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	return
+}
+
+func SetUntrustedCmd(cmd string) (err error) {
+	data := map[string]string{
+		"type": "user::proc::trusted::delete",
+		"cmd":  cmd,
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		return
+	}
+
+	// TODO: 更细致的判断是否执行成功
+	_, err = connector.Exec(string(b), time.Second)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	return
 }
