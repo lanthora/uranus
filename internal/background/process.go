@@ -4,6 +4,7 @@ package background
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"sync"
@@ -21,8 +22,8 @@ import (
 const (
 	sqlCreateProcessTable    = `create table if not exists process_event(id integer primary key autoincrement, cmd blob not null unique, workdir text not null, binary text not null, argv text not null, count integer not null, judge integer not null, status integer not null)`
 	sqlCreateProcessCmdIndex = `create unique index if not exists process_cmd_idx on process_event (cmd)`
-	sqlUpdateProcessCount    = `update process_event set count=count+1,judge=? where cmd=?`
-	sqlInsertProcessEvent    = `insert into process_event(cmd,workdir,binary,argv,count,judge,status) values(?,?,?,?,1,?,0)`
+	sqlUpdateProcessCount    = `update process_event set count=count+1,judge=?,status=? where cmd=?`
+	sqlInsertProcessEvent    = `insert into process_event(cmd,workdir,binary,argv,count,judge,status) values(?,?,?,?,1,?,?)`
 	sqlQueryAllowedProcesses = `select cmd from process_event where status=2`
 )
 
@@ -125,6 +126,13 @@ func (w *ProcessWorker) initTrustedCmd() (err error) {
 }
 
 func (w *ProcessWorker) updateCmd(cmd string, judge int) (err error) {
+	status, err := w.config.GetInteger("proc::auto::trust")
+	if err != nil {
+		status = process.StatusPending
+	}
+	if status == process.StatusTrusted && judge != process.StatusJudgeDefense {
+		w.setTrustedCmd(cmd)
+	}
 	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
 		logrus.Error(err)
@@ -138,7 +146,7 @@ func (w *ProcessWorker) updateCmd(cmd string, judge int) (err error) {
 		return
 	}
 	defer stmt.Close()
-	result, err := stmt.Exec(judge, cmd)
+	result, err := stmt.Exec(judge, status, cmd)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -160,7 +168,7 @@ func (w *ProcessWorker) updateCmd(cmd string, judge int) (err error) {
 	}
 	defer stmt.Close()
 	workdir, binary, argv := process.SplitCmd(cmd)
-	_, err = stmt.Exec(cmd, workdir, binary, argv, judge)
+	_, err = stmt.Exec(cmd, workdir, binary, argv, judge, status)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -227,12 +235,22 @@ func (w *ProcessWorker) Start() (err error) {
 	}
 
 	status, err := w.config.GetInteger("proc::core::status")
-	if err == nil && status == process.StatusEnable {
-		err = w.conn.Send(`{"type":"user::proc::enable"}`)
-		if err != nil {
+	if err != nil {
+		status = process.StatusDisable
+	}
+
+	if status == process.StatusEnable {
+		if ok := process.ProcessEnable(); !ok {
+			err = errors.New("process protection enable failed")
 			return
 		}
 	}
+
+	judge, err := w.config.GetInteger("proc::judge::status")
+	if err != nil {
+		judge = process.StatusJudgeDisable
+	}
+	process.ProcessJudgeUpdate(judge)
 
 	err = w.conn.Send(`{"type":"user::msg::sub","section":"audit::proc::report"}`)
 	if err != nil {
@@ -264,6 +282,11 @@ func (w *ProcessWorker) Stop() (err error) {
 	}
 
 	err = w.conn.Send(`{"type":"user::proc::disable"}`)
+	if err != nil {
+		return
+	}
+
+	err = w.conn.Send(`{"type":"user::proc::trusted::clear"}`)
 	if err != nil {
 		return
 	}

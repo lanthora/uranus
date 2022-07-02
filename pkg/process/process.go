@@ -16,7 +16,7 @@ const (
 const (
 	StatusJudgeDisable = 0
 	StatusJudgeAudit   = 1
-	StatusJudgeProtect = 2
+	StatusJudgeDefense = 2
 )
 
 const (

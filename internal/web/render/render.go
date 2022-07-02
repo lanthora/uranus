@@ -36,6 +36,7 @@ const (
 	StatusUpdateFilePolicyFailed         = 25
 	StatusFileEnableFailed               = 26
 	StatusFileDisableFailed              = 27
+	StatusProcessAutoTrustFailed         = 28
 )
 
 var messages = [...]string{
@@ -67,6 +68,7 @@ var messages = [...]string{
 	StatusUpdateFilePolicyFailed:         "update file policy failed",
 	StatusFileEnableFailed:               "file enable failed",
 	StatusFileDisableFailed:              "file disable failed",
+	StatusProcessAutoTrustFailed:         "process auto trust failed",
 }
 
 func Success(context *gin.Context, data interface{}) {
