@@ -41,7 +41,7 @@ func Init(engine *gin.Engine, dataSourceName string) (err error) {
 }
 
 func (w *Worker) fileCoreStatus(context *gin.Context) {
-	core, err := w.config.GetInteger("file::core::status")
+	core, err := w.config.GetInteger(config.FileModuleStatus)
 	if err != nil {
 		core = file.StatusDisable
 	}
@@ -56,7 +56,7 @@ func (w *Worker) fileCoreStatus(context *gin.Context) {
 }
 
 func (w *Worker) fileCoreEnable(context *gin.Context) {
-	if err := w.config.SetInteger("file::core::status", file.StatusEnable); err != nil {
+	if err := w.config.SetInteger(config.FileModuleStatus, file.StatusEnable); err != nil {
 		render.Status(context, render.StatusProcessEnableFailed)
 		return
 	}
@@ -69,7 +69,7 @@ func (w *Worker) fileCoreEnable(context *gin.Context) {
 }
 
 func (w *Worker) fileCoreDisable(context *gin.Context) {
-	if err := w.config.SetInteger("file::core::status", file.StatusDisable); err != nil {
+	if err := w.config.SetInteger(config.FileModuleStatus, file.StatusDisable); err != nil {
 		render.Status(context, render.StatusFileDisableFailed)
 		return
 	}

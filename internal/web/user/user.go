@@ -40,7 +40,7 @@ func Init(engine *gin.Engine, dataSourceName string) (err error) {
 	w.engine.POST("/user/alive", w.userAlive)
 	w.engine.POST("/user/info", w.userInfo)
 	w.engine.POST("/user/logout", w.userLogout)
-	w.engine.POST("/user/insert", w.userInsert)
+	w.engine.POST("/user/add", w.userAdd)
 	w.engine.POST("/user/delete", w.userDelete)
 	w.engine.POST("/user/update", w.userUpdate)
 	w.engine.POST("/user/query", w.userQuery)
@@ -169,7 +169,7 @@ func (w *Worker) userLogout(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) userInsert(context *gin.Context) {
+func (w *Worker) userAdd(context *gin.Context) {
 	request := struct {
 		Username    string `json:"username" binding:"required"`
 		Password    string `json:"password" binding:"required"`

@@ -74,13 +74,20 @@ func (w *FileWorker) Init() (err error) {
 		return
 	}
 
-	coreStatus, tmpErr := w.config.GetInteger("file::core::status")
-	if tmpErr == nil && coreStatus == file.StatusEnable {
-		if ok := file.FileEnable(); !ok {
-			err = errors.New("file protection enable failed")
-			logrus.Error(err)
-			return
-		}
+	status, err := w.config.GetInteger(config.FileModuleStatus)
+	if err != nil {
+		err = nil
+		return
+	}
+
+	if status != file.StatusEnable {
+		return
+	}
+
+	if ok := file.FileEnable(); !ok {
+		err = errors.New("file protection enable failed")
+		logrus.Error(err)
+		return
 	}
 	return
 }

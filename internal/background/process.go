@@ -110,7 +110,7 @@ func (w *ProcessWorker) initTrustedCmd() (err error) {
 }
 
 func (w *ProcessWorker) updateCmd(cmd string, judge int) (err error) {
-	status, err := w.config.GetInteger("proc::auto::trust")
+	status, err := w.config.GetInteger(config.ProcessCmdDefaultStatus)
 	if err != nil {
 		status = process.StatusPending
 	}
@@ -217,7 +217,7 @@ func (w *ProcessWorker) Init() (err error) {
 		return
 	}
 
-	status, err := w.config.GetInteger("proc::core::status")
+	status, err := w.config.GetInteger(config.ProcessModuleStatus)
 	if err != nil {
 		status = process.StatusDisable
 	}
@@ -229,7 +229,7 @@ func (w *ProcessWorker) Init() (err error) {
 		}
 	}
 
-	judge, err := w.config.GetInteger("proc::judge::status")
+	judge, err := w.config.GetInteger(config.ProcessProtectionMode)
 	if err != nil {
 		judge = process.StatusJudgeDisable
 	}
