@@ -39,18 +39,18 @@ func Init(engine *gin.Engine, dataSourceName string) (err error) {
 	w.engine.POST("/process/core/status", w.processCoreStatus)
 	w.engine.POST("/process/core/enable", w.processCoreEnable)
 	w.engine.POST("/process/core/disable", w.processCoreDisable)
-	w.engine.POST("/process/judge/status", w.processJudgeStatus)
-	w.engine.POST("/process/judge/update", w.processJudgeUpdate)
+	w.engine.POST("/process/audit/status", w.processAuditStatus)
+	w.engine.POST("/process/audit/update", w.processAuditUpdate)
 	w.engine.POST("/process/event/list", w.processEventList)
-	w.engine.POST("/process/event/update", w.processEventUpdate)
 	w.engine.POST("/process/event/delete", w.processEventDelete)
-	w.engine.POST("/process/auto/trust", w.processAutoTrust)
-	w.engine.POST("/process/auto/status", w.processAutoStatus)
+	w.engine.POST("/process/policy/update", w.processPolicyUpdate)
+	w.engine.POST("/process/trust/update", w.processTrustUpdate)
+	w.engine.POST("/process/trust/status", w.processTrustStatus)
 	return
 }
 
 func (w *Worker) processCoreStatus(context *gin.Context) {
-	status, err := w.config.GetInteger("proc::core::status")
+	status, err := w.config.GetInteger(config.ProcessModuleStatus)
 	if err != nil {
 		status = process.StatusDisable
 	}
@@ -64,7 +64,7 @@ func (w *Worker) processCoreStatus(context *gin.Context) {
 	render.Success(context, response)
 }
 func (w *Worker) processCoreEnable(context *gin.Context) {
-	if err := w.config.SetInteger("proc::core::status", process.StatusEnable); err != nil {
+	if err := w.config.SetInteger(config.ProcessModuleStatus, process.StatusEnable); err != nil {
 		render.Status(context, render.StatusProcessEnableFailed)
 		return
 	}
@@ -76,7 +76,7 @@ func (w *Worker) processCoreEnable(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 func (w *Worker) processCoreDisable(context *gin.Context) {
-	if err := w.config.SetInteger("proc::core::status", process.StatusDisable); err != nil {
+	if err := w.config.SetInteger(config.ProcessModuleStatus, process.StatusDisable); err != nil {
 		render.Status(context, render.StatusProcessDisableFailed)
 		return
 	}
@@ -88,8 +88,8 @@ func (w *Worker) processCoreDisable(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) processJudgeStatus(context *gin.Context) {
-	judge, err := w.config.GetInteger("proc::judge::status")
+func (w *Worker) processAuditStatus(context *gin.Context) {
+	judge, err := w.config.GetInteger(config.ProcessProtectionMode)
 	if err != nil {
 		judge = process.StatusJudgeDisable
 	}
@@ -103,7 +103,7 @@ func (w *Worker) processJudgeStatus(context *gin.Context) {
 	render.Success(context, response)
 }
 
-func (w *Worker) processJudgeUpdate(context *gin.Context) {
+func (w *Worker) processAuditUpdate(context *gin.Context) {
 	request := struct {
 		Judge int `json:"judge" binding:"number"`
 	}{}
@@ -118,7 +118,7 @@ func (w *Worker) processJudgeUpdate(context *gin.Context) {
 		return
 	}
 
-	if err := w.config.SetInteger("proc::judge::status", request.Judge); err != nil {
+	if err := w.config.SetInteger(config.ProcessProtectionMode, request.Judge); err != nil {
 		render.Status(context, render.StatusUpdateProcessJudgeFailed)
 		return
 	}
@@ -149,7 +149,7 @@ func (w *Worker) processEventList(context *gin.Context) {
 	render.Success(context, events)
 }
 
-func (w *Worker) processEventUpdate(context *gin.Context) {
+func (w *Worker) processPolicyUpdate(context *gin.Context) {
 	request := struct {
 		ID     int `json:"id" binding:"number"`
 		Status int `json:"status" binding:"number"`
@@ -191,7 +191,7 @@ func (w *Worker) processEventDelete(context *gin.Context) {
 	render.Status(context, render.StatusUnknownError)
 }
 
-func (w *Worker) processAutoTrust(context *gin.Context) {
+func (w *Worker) processTrustUpdate(context *gin.Context) {
 	request := struct {
 		Status int `json:"status" binding:"number"`
 	}{}
@@ -199,15 +199,15 @@ func (w *Worker) processAutoTrust(context *gin.Context) {
 		render.Status(context, render.StatusInvalidArgument)
 		return
 	}
-	if err := w.config.SetInteger("proc::auto::trust", request.Status); err != nil {
+	if err := w.config.SetInteger(config.ProcessCmdDefaultStatus, request.Status); err != nil {
 		render.Status(context, render.StatusProcessAutoTrustFailed)
 		return
 	}
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) processAutoStatus(context *gin.Context) {
-	status, err := w.config.GetInteger("proc::auto::trust")
+func (w *Worker) processTrustStatus(context *gin.Context) {
+	status, err := w.config.GetInteger(config.ProcessCmdDefaultStatus)
 	if err != nil {
 		render.Status(context, render.StatusProcessGetAutoStatusFailed)
 		return

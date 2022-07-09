@@ -9,7 +9,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var (
+const (
 	sqlCreateConfigTable = `create table if not exists config(id integer primary key autoincrement, key text not null unique, integer integer, real real, text text)`
 	sqlInsertInteger     = `insert into config(key,integer) values(?,?)`
 	sqlUpdateInteger     = `update config set integer=? where key=?`
@@ -20,6 +20,14 @@ var (
 	sqlInsertText        = `insert into config(key,text) values(?,?)`
 	sqlUpdateText        = `update config set text=? where key=?`
 	sqlQueryText         = `select text from config where key=?`
+)
+
+const (
+	ProcessModuleStatus     = "process module status"
+	ProcessProtectionMode   = "process protection mode"
+	ProcessCmdDefaultStatus = "Process cmd default status"
+	FileModuleStatus        = "file module status"
+	NetModuleStatus         = "net module status"
 )
 
 type Config struct {
