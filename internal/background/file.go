@@ -4,7 +4,6 @@ package background
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"os"
 	"path/filepath"
 	"sync"
@@ -45,6 +44,7 @@ func NewFileWorker(dataSourceName string) *FileWorker {
 	}
 	return &worker
 }
+
 func (w *FileWorker) Init() (err error) {
 	w.running = true
 	err = w.conn.Connect()
@@ -84,8 +84,8 @@ func (w *FileWorker) Init() (err error) {
 		return
 	}
 
-	if ok := file.FileEnable(); !ok {
-		err = errors.New("file protection enable failed")
+	if ok := file.Enable(); !ok {
+		err = file.EnableError
 		logrus.Error(err)
 		return
 	}
@@ -107,12 +107,12 @@ func (w *FileWorker) Stop() (err error) {
 		return
 	}
 
-	if ok := file.FileDisable(); !ok {
+	if ok := file.Disable(); !ok {
 		logrus.Error("file protection disable failed")
 		return
 	}
 
-	if ok := file.FileClear(); !ok {
+	if ok := file.ClearPolicy(); !ok {
 		logrus.Error("file protection clear failed")
 		return
 	}
@@ -227,12 +227,11 @@ func (w *FileWorker) setPolicyThenGetExceptionPolicies() (policies []file.Policy
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var (
-			policy file.Policy
-			fsid   uint64
-			ino    uint64
-			status int
-		)
+		policy := file.Policy{}
+		fsid := uint64(0)
+		ino := uint64(0)
+		status := int(0)
+
 		err = rows.Scan(&policy.ID, &policy.Path, &policy.Fsid, &policy.Ino, &policy.Perm)
 		if err != nil {
 			logrus.Error(err)
@@ -353,7 +352,7 @@ func (w *FileWorker) handleFileEvent(path string, fsid, ino uint64, perm int) (e
 	}
 	defer stmt.Close()
 
-	var policyId uint64
+	policyId := uint64(0)
 	err = stmt.QueryRow(fsid, ino).Scan(&policyId)
 	if err != nil {
 		logrus.Error(err)

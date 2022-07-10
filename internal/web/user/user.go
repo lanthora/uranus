@@ -53,10 +53,10 @@ func Init(engine *gin.Engine, dataSourceName string) (err error) {
 }
 
 type User struct {
-	UserID      uint64 `json:"userID" binding:"required"`
-	Username    string `json:"username" binding:"required"`
-	AliasName   string `json:"aliasName" binding:"required"`
-	Permissions string `json:"permissions" binding:"required"`
+	UserID      uint64 `json:"userID"`
+	Username    string `json:"username"`
+	AliasName   string `json:"aliasName"`
+	Permissions string `json:"permissions"`
 }
 
 func (w *Worker) middleware() gin.HandlerFunc {
@@ -192,7 +192,7 @@ func (w *Worker) userAdd(context *gin.Context) {
 func (w *Worker) userQuery(context *gin.Context) {
 	users, err := w.queryAllUser()
 	if err != nil {
-		render.Status(context, render.StatusQuertUserFailed)
+		render.Status(context, render.StatusQueryUserFailed)
 		return
 	}
 	render.Success(context, users)

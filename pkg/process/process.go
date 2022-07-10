@@ -1,7 +1,9 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 package process
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -27,6 +29,10 @@ const (
 	StatusTrusted   = 2
 )
 
+var (
+	EnableError = errors.New("process protection enable failed")
+)
+
 func SplitCmd(cmd string) (workdir string, binary string, argv string) {
 	raw := strings.Split(cmd, "\u001f")
 	workdir = raw[0]
@@ -38,7 +44,7 @@ func SplitCmd(cmd string) (workdir string, binary string, argv string) {
 	return
 }
 
-func ProcessJudgeUpdate(judge int) bool {
+func UpdateJudge(judge int) bool {
 	request := map[string]interface{}{
 		"type":  "user::proc::judge",
 		"judge": judge,
@@ -55,7 +61,7 @@ func ProcessJudgeUpdate(judge int) bool {
 	}
 
 	response := struct {
-		Code  int         `json:"code" binding:"required"`
+		Code  int         `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(responseStr), &response); err != nil {
@@ -64,14 +70,14 @@ func ProcessJudgeUpdate(judge int) bool {
 	return response.Code == 0
 }
 
-func ProcessEnable() bool {
+func Enable() bool {
 	responseStr, err := connector.Exec(`{"type":"user::proc::enable"}`, time.Second)
 	if err != nil {
 		return false
 	}
 
 	response := struct {
-		Code  int         `json:"code" binding:"required"`
+		Code  int         `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(responseStr), &response); err != nil {
@@ -80,14 +86,14 @@ func ProcessEnable() bool {
 	return response.Code == 0
 }
 
-func ProcessDisable() bool {
+func Disable() bool {
 	responseStr, err := connector.Exec(`{"type":"user::proc::disable"}`, time.Second)
 	if err != nil {
 		return false
 	}
 
 	response := struct {
-		Code  int         `json:"code" binding:"required"`
+		Code  int         `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(responseStr), &response); err != nil {
@@ -96,14 +102,14 @@ func ProcessDisable() bool {
 	return response.Code == 0
 }
 
-func ProcessClear() bool {
+func ClearPolicy() bool {
 	responseStr, err := connector.Exec(`{"type":"user::proc::trusted::clear"}`, time.Second)
 	if err != nil {
 		return false
 	}
 
 	response := struct {
-		Code  int         `json:"code" binding:"required"`
+		Code  int         `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(responseStr), &response); err != nil {

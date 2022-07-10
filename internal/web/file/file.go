@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 package file
 
 import (
@@ -41,15 +42,15 @@ func Init(engine *gin.Engine, dataSourceName string) (err error) {
 }
 
 func (w *Worker) fileCoreStatus(context *gin.Context) {
-	core, err := w.config.GetInteger(config.FileModuleStatus)
+	status, err := w.config.GetInteger(config.FileModuleStatus)
 	if err != nil {
-		core = file.StatusDisable
+		status = file.StatusDisable
 	}
 
 	response := struct {
-		Core int `json:"core" binding:"required"`
+		Status int `json:"status"`
 	}{
-		Core: core,
+		Status: status,
 	}
 
 	render.Success(context, response)
@@ -60,7 +61,7 @@ func (w *Worker) fileCoreEnable(context *gin.Context) {
 		render.Status(context, render.StatusProcessEnableFailed)
 		return
 	}
-	ok := file.FileEnable()
+	ok := file.Enable()
 	if !ok {
 		render.Status(context, render.StatusProcessEnableFailed)
 		return
@@ -73,7 +74,7 @@ func (w *Worker) fileCoreDisable(context *gin.Context) {
 		render.Status(context, render.StatusFileDisableFailed)
 		return
 	}
-	ok := file.FileDisable()
+	ok := file.Disable()
 	if !ok {
 		render.Status(context, render.StatusFileDisableFailed)
 		return
@@ -205,13 +206,13 @@ func (w *Worker) filePolicyList(context *gin.Context) {
 		return
 	}
 
-	events, err := w.queryFilePolicyLimitOffset(request.Limit, request.Offset)
+	policies, err := w.queryFilePolicyLimitOffset(request.Limit, request.Offset)
 	if err != nil {
 		logrus.Error(err)
 		render.Status(context, render.StatusQueryFilePolicyListFailed)
 		return
 	}
-	render.Success(context, events)
+	render.Success(context, policies)
 }
 
 func (w *Worker) filePolicyQuery(context *gin.Context) {

@@ -50,7 +50,7 @@ func (w *Worker) noUser() bool {
 	}
 	defer stmt.Close()
 
-	var count int
+	count := int(0)
 	if err = stmt.QueryRow().Scan(&count); err != nil {
 		return false
 	}
@@ -93,8 +93,8 @@ func (w *Worker) checkUserPassword(username, password string) (ok bool, err erro
 		return
 	}
 	defer stmt.Close()
-
-	var salt, hash string
+	salt := ""
+	hash := ""
 	if err = stmt.QueryRow(username).Scan(&salt, &hash); err != nil {
 		return
 	}
@@ -140,7 +140,7 @@ func (w *Worker) queryAllUser() (users []User, err error) {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var user User
+		user := User{}
 		err = rows.Scan(&user.UserID, &user.Username, &user.AliasName, &user.Permissions)
 		if err != nil {
 			return

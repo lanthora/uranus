@@ -10,6 +10,7 @@ import (
 
 	"uranus/internal/web/control"
 	"uranus/internal/web/file"
+	"uranus/internal/web/net"
 	"uranus/internal/web/process"
 	"uranus/internal/web/user"
 
@@ -55,6 +56,10 @@ func (w *WebWorker) Start() (err error) {
 	}
 
 	if err = file.Init(engine, w.dataSourceName); err != nil {
+		return
+	}
+
+	if err = net.Init(engine, w.dataSourceName); err != nil {
 		return
 	}
 

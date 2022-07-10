@@ -8,7 +8,7 @@ import (
 )
 
 func RenderAuditProcReport(text string) (richText string) {
-	var doc map[string]interface{}
+	doc := map[string]interface{}{}
 
 	json.Unmarshal([]byte(text), &doc)
 	if doc["type"].(string) != "audit::proc::report" {
@@ -35,7 +35,7 @@ func RenderAuditProcReport(text string) (richText string) {
 }
 
 func RenderUserMsgSub(text string) (rich string) {
-	var doc map[string]interface{}
+	doc := map[string]interface{}{}
 
 	json.Unmarshal([]byte(text), &doc)
 	if doc["type"].(string) != "user::msg::sub" {
@@ -58,7 +58,7 @@ func RenderUserMsgSub(text string) (rich string) {
 }
 
 func RenderUserMsgUnsub(text string) (rich string) {
-	var doc map[string]interface{}
+	doc := map[string]interface{}{}
 
 	json.Unmarshal([]byte(text), &doc)
 	if doc["type"].(string) != "user::msg::unsub" {
@@ -81,7 +81,7 @@ func RenderUserMsgUnsub(text string) (rich string) {
 }
 
 func RenderKernelProcEnable(text string) (rich string) {
-	var doc map[string]interface{}
+	doc := map[string]interface{}{}
 
 	json.Unmarshal([]byte(text), &doc)
 	if doc["type"].(string) != "kernel::proc::enable" {
@@ -101,7 +101,7 @@ func RenderKernelProcEnable(text string) (rich string) {
 }
 
 func RenderKernelProcDisable(text string) (rich string) {
-	var doc map[string]interface{}
+	doc := map[string]interface{}{}
 
 	json.Unmarshal([]byte(text), &doc)
 	if doc["type"].(string) != "kernel::proc::disable" {
