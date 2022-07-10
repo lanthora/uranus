@@ -17,13 +17,13 @@ type Worker struct {
 }
 
 type Event struct {
-	ID      uint64 `json:"id" binding:"required"`
-	Workdir string `json:"workdir" binding:"required"`
-	Binary  string `json:"binary" binding:"required"`
-	Argv    string `json:"argv" binding:"required"`
-	Count   uint64 `json:"count" binding:"required"`
-	Judge   uint64 `json:"judge" binding:"required"`
-	Status  uint64 `json:"status" binding:"required"`
+	ID      uint64 `json:"id"`
+	Workdir string `json:"workdir"`
+	Binary  string `json:"binary"`
+	Argv    string `json:"argv"`
+	Count   uint64 `json:"count"`
+	Judge   uint64 `json:"judge"`
+	Status  uint64 `json:"status"`
 }
 
 func Init(engine *gin.Engine, dataSourceName string) (err error) {
@@ -56,9 +56,9 @@ func (w *Worker) processCoreStatus(context *gin.Context) {
 	}
 
 	response := struct {
-		Core int `json:"core" binding:"required"`
+		Status int `json:"status"`
 	}{
-		Core: status,
+		Status: status,
 	}
 
 	render.Success(context, response)
@@ -68,7 +68,7 @@ func (w *Worker) processCoreEnable(context *gin.Context) {
 		render.Status(context, render.StatusProcessEnableFailed)
 		return
 	}
-	ok := process.ProcessEnable()
+	ok := process.Enable()
 	if !ok {
 		render.Status(context, render.StatusProcessEnableFailed)
 		return
@@ -80,7 +80,7 @@ func (w *Worker) processCoreDisable(context *gin.Context) {
 		render.Status(context, render.StatusProcessDisableFailed)
 		return
 	}
-	ok := process.ProcessDisable()
+	ok := process.Disable()
 	if !ok {
 		render.Status(context, render.StatusProcessDisableFailed)
 		return
@@ -122,7 +122,7 @@ func (w *Worker) processAuditUpdate(context *gin.Context) {
 		render.Status(context, render.StatusUpdateProcessJudgeFailed)
 		return
 	}
-	ok := process.ProcessJudgeUpdate(request.Judge)
+	ok := process.UpdateJudge(request.Judge)
 	if !ok {
 		render.Status(context, render.StatusUpdateProcessJudgeFailed)
 		return
@@ -200,7 +200,7 @@ func (w *Worker) processTrustUpdate(context *gin.Context) {
 		return
 	}
 	if err := w.config.SetInteger(config.ProcessCmdDefaultStatus, request.Status); err != nil {
-		render.Status(context, render.StatusProcessAutoTrustFailed)
+		render.Status(context, render.StatusProcessTrustUpdateFailed)
 		return
 	}
 	render.Status(context, render.StatusSuccess)
@@ -209,7 +209,7 @@ func (w *Worker) processTrustUpdate(context *gin.Context) {
 func (w *Worker) processTrustStatus(context *gin.Context) {
 	status, err := w.config.GetInteger(config.ProcessCmdDefaultStatus)
 	if err != nil {
-		render.Status(context, render.StatusProcessGetAutoStatusFailed)
+		render.Status(context, render.StatusProcessGetTrustStatusFailed)
 		return
 	}
 	response := struct {

@@ -4,7 +4,6 @@ package background
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"os"
 	"path/filepath"
 	"sync"
@@ -44,6 +43,98 @@ func NewProcessWorker(dataSourceName string) *ProcessWorker {
 	return &worker
 }
 
+func (w *ProcessWorker) Init() (err error) {
+	w.running = true
+	err = w.conn.Connect()
+	if err != nil {
+		return
+	}
+	err = w.initDB()
+	if err != nil {
+		return
+	}
+
+	w.config, err = config.New(w.dataSourceName)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	judge, err := w.config.GetInteger(config.ProcessProtectionMode)
+	if err != nil {
+		judge = process.StatusJudgeDisable
+	}
+	process.UpdateJudge(judge)
+
+	err = w.conn.Send(`{"type":"user::msg::sub","section":"audit::proc::report"}`)
+	if err != nil {
+		return
+	}
+	err = w.conn.Send(`{"type":"user::msg::sub","section":"osinfo::report"}`)
+	if err != nil {
+		return
+	}
+
+	err = w.initTrustedCmd()
+	if err != nil {
+		return
+	}
+
+	status, err := w.config.GetInteger(config.ProcessModuleStatus)
+	if err != nil {
+		err = nil
+		return
+	}
+
+	if status != process.StatusEnable {
+		return
+
+	}
+
+	if ok := process.Enable(); !ok {
+		err = process.EnableError
+		return
+	}
+	return
+}
+
+func (w *ProcessWorker) Start() (err error) {
+	w.wg.Add(1)
+	go w.run()
+	return
+}
+
+func (w *ProcessWorker) Stop() (err error) {
+	err = w.conn.Send(`{"type":"user::msg::unsub","section":"audit::proc::report"}`)
+	if err != nil {
+		return
+	}
+	err = w.conn.Send(`{"type":"user::msg::unsub","section":"osinfo::report"}`)
+	if err != nil {
+		return
+	}
+
+	if ok := process.Disable(); !ok {
+		logrus.Error("process protection disable failed")
+		return
+	}
+
+	if ok := process.ClearPolicy(); !ok {
+		logrus.Error("process protection clear failed")
+		return
+	}
+
+	time.Sleep(time.Second)
+	w.running = false
+	err = w.conn.Shutdown(time.Now())
+	if err != nil {
+		return
+	}
+	w.wg.Wait()
+	w.conn.Close()
+	return
+}
+
 func (w *ProcessWorker) initDB() (err error) {
 	os.MkdirAll(filepath.Dir(w.dataSourceName), os.ModeDir)
 	db, err := sql.Open("sqlite3", w.dataSourceName)
@@ -65,11 +156,6 @@ func (w *ProcessWorker) initDB() (err error) {
 		return
 	}
 
-	w.config, err = config.New(w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
 	return
 }
 
@@ -94,7 +180,7 @@ func (w *ProcessWorker) initTrustedCmd() (err error) {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var cmd string
+		cmd := ""
 		err = rows.Scan(&cmd)
 		if err != nil {
 			return
@@ -205,85 +291,4 @@ func (w *ProcessWorker) run() {
 
 		go w.handleMsg(msg)
 	}
-}
-func (w *ProcessWorker) Init() (err error) {
-	w.running = true
-	err = w.conn.Connect()
-	if err != nil {
-		return
-	}
-	err = w.initDB()
-	if err != nil {
-		return
-	}
-
-	status, err := w.config.GetInteger(config.ProcessModuleStatus)
-	if err != nil {
-		status = process.StatusDisable
-	}
-
-	if status == process.StatusEnable {
-		if ok := process.ProcessEnable(); !ok {
-			err = errors.New("process protection enable failed")
-			return
-		}
-	}
-
-	judge, err := w.config.GetInteger(config.ProcessProtectionMode)
-	if err != nil {
-		judge = process.StatusJudgeDisable
-	}
-	process.ProcessJudgeUpdate(judge)
-
-	err = w.conn.Send(`{"type":"user::msg::sub","section":"audit::proc::report"}`)
-	if err != nil {
-		return
-	}
-	err = w.conn.Send(`{"type":"user::msg::sub","section":"osinfo::report"}`)
-	if err != nil {
-		return
-	}
-
-	err = w.initTrustedCmd()
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (w *ProcessWorker) Start() (err error) {
-	w.wg.Add(1)
-	go w.run()
-	return
-}
-
-func (w *ProcessWorker) Stop() (err error) {
-	err = w.conn.Send(`{"type":"user::msg::unsub","section":"audit::proc::report"}`)
-	if err != nil {
-		return
-	}
-	err = w.conn.Send(`{"type":"user::msg::unsub","section":"osinfo::report"}`)
-	if err != nil {
-		return
-	}
-
-	if ok := process.ProcessDisable(); !ok {
-		logrus.Error("process protection disable failed")
-		return
-	}
-
-	if ok := process.ProcessClear(); !ok {
-		logrus.Error("process protection clear failed")
-		return
-	}
-
-	time.Sleep(time.Second)
-	w.running = false
-	err = w.conn.Shutdown(time.Now())
-	if err != nil {
-		return
-	}
-	w.wg.Wait()
-	w.conn.Close()
-	return
 }

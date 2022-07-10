@@ -1,7 +1,9 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 package file
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 	"uranus/pkg/connector"
 
@@ -26,24 +28,28 @@ const (
 	StatusFileNotExist = 3
 )
 
+var (
+	EnableError = errors.New("file protection enable failed")
+)
+
 type Policy struct {
-	ID        uint64 `json:"id" binding:"required"`
-	Path      string `json:"path" binding:"required"`
-	Fsid      uint64 `json:"fsid" binding:"required"`
-	Ino       uint64 `json:"ino" binding:"required"`
-	Perm      int    `json:"perm" binding:"required"`
-	Timestamp int64  `json:"timestamp" binding:"required"`
-	Status    int    `json:"status" binding:"required"`
+	ID        uint64 `json:"id"`
+	Path      string `json:"path"`
+	Fsid      uint64 `json:"fsid"`
+	Ino       uint64 `json:"ino"`
+	Perm      int    `json:"perm"`
+	Timestamp int64  `json:"timestamp"`
+	Status    int    `json:"status"`
 }
 
 type Event struct {
-	ID        uint64 `json:"id" binding:"required"`
-	Path      string `json:"path" binding:"required"`
-	Fsid      uint64 `json:"fsid" binding:"required"`
-	Ino       uint64 `json:"ino" binding:"required"`
-	Perm      int    `json:"perm" binding:"required"`
-	Timestamp int64  `json:"timestamp" binding:"required"`
-	Policy    uint64 `json:"policy" binding:"required"`
+	ID        uint64 `json:"id"`
+	Path      string `json:"path"`
+	Fsid      uint64 `json:"fsid"`
+	Ino       uint64 `json:"ino"`
+	Perm      int    `json:"perm"`
+	Timestamp int64  `json:"timestamp"`
+	Policy    uint64 `json:"policy"`
 }
 
 func SetPolicy(path string, perm, flag int) (fsid, ino uint64, status int, err error) {
@@ -90,14 +96,14 @@ func SetPolicy(path string, perm, flag int) (fsid, ino uint64, status int, err e
 	return
 }
 
-func FileEnable() bool {
+func Enable() bool {
 	tmp, err := connector.Exec(`{"type":"user::file::enable"}`, time.Second)
 	if err != nil {
 		return false
 	}
 
 	response := struct {
-		Code  int         `json:"code" binding:"required"`
+		Code  int         `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(tmp), &response); err != nil {
@@ -106,14 +112,14 @@ func FileEnable() bool {
 	return response.Code == 0
 }
 
-func FileDisable() bool {
+func Disable() bool {
 	tmp, err := connector.Exec(`{"type":"user::file::disable"}`, time.Second)
 	if err != nil {
 		return false
 	}
 
 	response := struct {
-		Code  int         `json:"code" binding:"required"`
+		Code  int         `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(tmp), &response); err != nil {
@@ -122,14 +128,14 @@ func FileDisable() bool {
 	return response.Code == 0
 }
 
-func FileClear() bool {
+func ClearPolicy() bool {
 	tmp, err := connector.Exec(`{"type":"user::file::clear"}`, time.Second)
 	if err != nil {
 		return false
 	}
 
 	response := struct {
-		Code  int         `json:"code" binding:"required"`
+		Code  int         `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(tmp), &response); err != nil {

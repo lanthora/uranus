@@ -75,7 +75,7 @@ func (w *TelegramWorker) runReportToOwner() {
 			continue
 		}
 
-		var doc map[string]interface{}
+		doc := map[string]interface{}{}
 		err = json.Unmarshal([]byte(msg), &doc)
 		if err != nil {
 			logrus.Error(err)

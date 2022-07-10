@@ -22,15 +22,13 @@ func InitLogrusFormat() {
 }
 
 func (f *logFormatter) Format(entry *logrus.Entry) ([]byte, error) {
-	var b *bytes.Buffer
+	b := &bytes.Buffer{}
 	if entry.Buffer != nil {
 		b = entry.Buffer
-	} else {
-		b = &bytes.Buffer{}
 	}
 
 	timestamp := entry.Time.Format("2006-01-02 15:04:05")
-	var msg string
+	msg := ""
 	file := strings.TrimPrefix(entry.Caller.File, BuildDir)
 	if entry.HasCaller() {
 		msg = fmt.Sprintf("[%s] [%s] [%s:%d] %s\n",

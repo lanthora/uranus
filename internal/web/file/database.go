@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 package file
 
 import (
@@ -117,7 +118,7 @@ func (w *Worker) queryFilePolicyById(id int) (event file.Policy, err error) {
 	return
 }
 
-func (w *Worker) queryFilePolicyLimitOffset(limit, offset int) (events []file.Policy, err error) {
+func (w *Worker) queryFilePolicyLimitOffset(limit, offset int) (policies []file.Policy, err error) {
 	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
 		logrus.Error(err)
@@ -138,13 +139,13 @@ func (w *Worker) queryFilePolicyLimitOffset(limit, offset int) (events []file.Po
 	}
 	defer rows.Close()
 	for rows.Next() {
-		e := file.Policy{}
-		err = rows.Scan(&e.ID, &e.Path, &e.Fsid, &e.Ino, &e.Perm, &e.Timestamp, &e.Status)
+		policy := file.Policy{}
+		err = rows.Scan(&policy.ID, &policy.Path, &policy.Fsid, &policy.Ino, &policy.Perm, &policy.Timestamp, &policy.Status)
 		if err != nil {
 			logrus.Error(err)
 			return
 		}
-		events = append(events, e)
+		policies = append(policies, policy)
 	}
 	err = rows.Err()
 	if err != nil {

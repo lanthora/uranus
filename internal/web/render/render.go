@@ -15,7 +15,7 @@ const (
 	StatusInvalidArgument                = 4
 	StatusLoginFaild                     = 5
 	StatusCreateUserFailed               = 6
-	StatusQuertUserFailed                = 7
+	StatusQueryUserFailed                = 7
 	StatusUpdateUserFailed               = 8
 	StatusDeleteUserFailed               = 9
 	StatusUpdateProcessJudgeFailed       = 10
@@ -36,8 +36,15 @@ const (
 	StatusUpdateFilePolicyFailed         = 25
 	StatusFileEnableFailed               = 26
 	StatusFileDisableFailed              = 27
-	StatusProcessAutoTrustFailed         = 28
-	StatusProcessGetAutoStatusFailed     = 29
+	StatusProcessTrustUpdateFailed       = 28
+	StatusProcessGetTrustStatusFailed    = 29
+	StatusNetEnableFailed                = 30
+	StatusNetDisableFailed               = 31
+	StatusAddNetPolicyFailed             = 32
+	StatusAddNetPolicyDatabaseFailed     = 33
+	StatusDeleteNetPolicyFailed          = 34
+	StatusDeleteNetPolicyDatabaseFailed  = 35
+	StatusQueryNetPolicyListFailed       = 36
 )
 
 var messages = [...]string{
@@ -48,7 +55,7 @@ var messages = [...]string{
 	StatusInvalidArgument:                "invalid argument",
 	StatusLoginFaild:                     "login failed",
 	StatusCreateUserFailed:               "create user failed",
-	StatusQuertUserFailed:                "query user failed",
+	StatusQueryUserFailed:                "query user failed",
 	StatusUpdateUserFailed:               "update user failed",
 	StatusDeleteUserFailed:               "delete user failed",
 	StatusUpdateProcessJudgeFailed:       "update process judge failed",
@@ -69,15 +76,22 @@ var messages = [...]string{
 	StatusUpdateFilePolicyFailed:         "update file policy failed",
 	StatusFileEnableFailed:               "file enable failed",
 	StatusFileDisableFailed:              "file disable failed",
-	StatusProcessAutoTrustFailed:         "process auto trust failed",
-	StatusProcessGetAutoStatusFailed:     "process get auto status failed",
+	StatusProcessTrustUpdateFailed:       "process trust update failed",
+	StatusProcessGetTrustStatusFailed:    "process get status status failed",
+	StatusNetEnableFailed:                "net enable failed",
+	StatusNetDisableFailed:               "net disable failed",
+	StatusAddNetPolicyFailed:             "add net policy failed",
+	StatusAddNetPolicyDatabaseFailed:     "add net policy database failed",
+	StatusDeleteNetPolicyFailed:          "delete net policy failed",
+	StatusDeleteNetPolicyDatabaseFailed:  "delete net policy databse failed",
+	StatusQueryNetPolicyListFailed:       "query net policy list failed",
 }
 
 func Success(context *gin.Context, data interface{}) {
 	response := struct {
-		Status  int         `json:"status" binding:"required"`
-		Message string      `json:"message" binding:"required"`
-		Data    interface{} `json:"data" binding:"required"`
+		Status  int         `json:"status"`
+		Message string      `json:"message"`
+		Data    interface{} `json:"data"`
 	}{
 		Status:  StatusSuccess,
 		Message: messages[StatusSuccess],
@@ -88,8 +102,8 @@ func Success(context *gin.Context, data interface{}) {
 
 func Status(context *gin.Context, status int) {
 	response := struct {
-		Status  int    `json:"status" binding:"required"`
-		Message string `json:"message" binding:"required"`
+		Status  int    `json:"status"`
+		Message string `json:"message"`
 	}{
 		Status:  status,
 		Message: messages[status],

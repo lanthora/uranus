@@ -32,6 +32,7 @@ func main() {
 
 	processWorker := background.NewProcessWorker(dataSourceName)
 	fileWorker := background.NewFileWorker(dataSourceName)
+	netWorker := background.NewNetWorker(dataSourceName)
 
 	if err := processWorker.Init(); err != nil {
 		logrus.Fatal(err)
@@ -41,11 +42,19 @@ func main() {
 		logrus.Fatal(err)
 	}
 
+	if err := netWorker.Init(); err != nil {
+		logrus.Fatal(err)
+	}
+
 	if err := processWorker.Start(); err != nil {
 		logrus.Fatal(err)
 	}
 
 	if err := fileWorker.Start(); err != nil {
+		logrus.Fatal(err)
+	}
+
+	if err := netWorker.Start(); err != nil {
 		logrus.Fatal(err)
 	}
 
@@ -68,6 +77,10 @@ func main() {
 	}
 
 	if err := fileWorker.Stop(); err != nil {
+		logrus.Error(err)
+	}
+
+	if err := netWorker.Stop(); err != nil {
 		logrus.Error(err)
 	}
 }
