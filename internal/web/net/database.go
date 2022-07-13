@@ -14,7 +14,7 @@ const (
 	sqlQueryNetPolicyLimitOffset = `select id,priority,addr_src_begin,addr_src_end,addr_dst_begin,addr_dst_end,protocol_begin,protocol_end,port_src_begin,port_src_end,port_dst_begin,port_dst_end,flags,response from net_policy limit ? offset ?`
 )
 
-func (w *Worker) insertNetPolicy(policy *net.Policy) (err error) {
+func (w *Worker) insertNetPolicy(policy *net.Policy) (id int64, err error) {
 	db, err := sql.Open("sqlite3", w.dataSourceName)
 	if err != nil {
 		logrus.Error(err)
@@ -28,13 +28,18 @@ func (w *Worker) insertNetPolicy(policy *net.Policy) (err error) {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(policy.Priority,
+	result, err := stmt.Exec(policy.Priority,
 		policy.Addr.Src.Begin, policy.Addr.Src.End,
 		policy.Addr.Dst.Begin, policy.Addr.Dst.End,
 		policy.Protocol.Begin, policy.Protocol.End,
 		policy.Port.Src.Begin, policy.Port.Src.End,
 		policy.Port.Dst.Begin, policy.Port.Dst.End,
 		policy.Flags, policy.Response)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	id, err = result.LastInsertId()
 	if err != nil {
 		logrus.Error(err)
 		return

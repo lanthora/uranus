@@ -85,14 +85,15 @@ func (w *Worker) netPolicyAdd(context *gin.Context) {
 		return
 	}
 
-	if ok := net.AddPolicy(request); !ok {
-		render.Status(context, render.StatusAddNetPolicyFailed)
+	id, err := w.insertNetPolicy(&request)
+	if err != nil {
+		render.Status(context, render.StatusAddNetPolicyDatabaseFailed)
 		return
 	}
 
-	err := w.insertNetPolicy(&request)
-	if err != nil {
-		render.Status(context, render.StatusAddNetPolicyDatabaseFailed)
+	request.ID = id
+	if ok := net.AddPolicy(request); !ok {
+		render.Status(context, render.StatusAddNetPolicyFailed)
 		return
 	}
 
