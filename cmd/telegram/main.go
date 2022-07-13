@@ -34,6 +34,14 @@ func main() {
 	telegramWorker := telegram.NewWorker(token, ownerID)
 	processWorker := background.NewProcessWorker(dataSourceName)
 
+	if err := telegram.SetStandaloneMode(dataSourceName); err != nil {
+		logrus.Fatal(err)
+	}
+
+	if err := processWorker.Init(); err != nil {
+		logrus.Fatal(err)
+	}
+
 	if err := telegramWorker.Start(); err != nil {
 		logrus.Fatal(err)
 	}

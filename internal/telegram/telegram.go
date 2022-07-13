@@ -6,7 +6,9 @@ import (
 	"sync"
 	"syscall"
 	"time"
+	"uranus/internal/config"
 	"uranus/pkg/connector"
+	"uranus/pkg/process"
 
 	"github.com/sirupsen/logrus"
 )
@@ -23,6 +25,30 @@ func NewWorker(token string, ownerID int64) *TelegramWorker {
 		bot: NewBot(token, ownerID),
 	}
 	return &w
+}
+
+func SetStandaloneMode(dataSourceName string) (err error) {
+	cfg, err := config.New(dataSourceName)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	err = cfg.SetInteger(config.ProcessModuleStatus, process.StatusEnable)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	err = cfg.SetInteger(config.ProcessProtectionMode, process.StatusJudgeAudit)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	err = cfg.SetInteger(config.ProcessCmdDefaultStatus, process.StatusTrusted)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	return
 }
 
 func (w *TelegramWorker) Start() (err error) {
