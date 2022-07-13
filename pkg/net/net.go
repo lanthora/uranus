@@ -19,8 +19,8 @@ var (
 )
 
 type Policy struct {
-	ID       uint64 `json:"id"`
-	Priority int8   `json:"priority"`
+	ID       int64 `json:"id"`
+	Priority int8  `json:"priority"`
 	Addr     struct {
 		Src struct {
 			Begin string `json:"begin"`
