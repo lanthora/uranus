@@ -40,13 +40,6 @@ func NewNetWorker(dataSourceName string) *NetWorker {
 }
 
 func (w *NetWorker) Init() (err error) {
-	w.running = true
-	err = w.conn.Connect()
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-
 	err = w.initDB()
 	if err != nil {
 		return
@@ -59,6 +52,17 @@ func (w *NetWorker) Init() (err error) {
 	}
 
 	if err = w.initNetPolicy(); err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	return
+}
+func (w *NetWorker) Start() (err error) {
+
+	w.running = true
+	err = w.conn.Connect()
+	if err != nil {
 		logrus.Error(err)
 		return
 	}
@@ -82,9 +86,6 @@ func (w *NetWorker) Init() (err error) {
 		logrus.Error(net.EnableError)
 	}
 
-	return
-}
-func (w *NetWorker) Start() (err error) {
 	w.wg.Add(1)
 	go w.run()
 	return

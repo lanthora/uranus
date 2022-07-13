@@ -46,13 +46,27 @@ func NewFileWorker(dataSourceName string) *FileWorker {
 }
 
 func (w *FileWorker) Init() (err error) {
-	w.running = true
-	err = w.conn.Connect()
+	err = w.initDB()
 	if err != nil {
 		logrus.Error(err)
 		return
 	}
-	err = w.initDB()
+
+	w.config, err = config.New(w.dataSourceName)
+	if err != nil {
+		return
+	}
+
+	if err = w.initFilePolicy(); err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	return
+}
+func (w *FileWorker) Start() (err error) {
+	w.running = true
+	err = w.conn.Connect()
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -65,11 +79,6 @@ func (w *FileWorker) Init() (err error) {
 	}
 	err = w.conn.Send(`{"type":"user::msg::sub","section":"osinfo::report"}`)
 	if err != nil {
-		logrus.Error(err)
-		return
-	}
-
-	if err = w.initFilePolicy(); err != nil {
 		logrus.Error(err)
 		return
 	}
@@ -89,9 +98,7 @@ func (w *FileWorker) Init() (err error) {
 		logrus.Error(err)
 		return
 	}
-	return
-}
-func (w *FileWorker) Start() (err error) {
+
 	w.wg.Add(1)
 	go w.run()
 	return
@@ -199,10 +206,6 @@ func (w *FileWorker) initDB() (err error) {
 		return
 	}
 
-	w.config, err = config.New(w.dataSourceName)
-	if err != nil {
-		return
-	}
 	return
 }
 

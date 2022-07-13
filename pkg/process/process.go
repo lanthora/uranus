@@ -30,7 +30,8 @@ const (
 )
 
 var (
-	EnableError = errors.New("process protection enable failed")
+	EnableError      = errors.New("process protection enable failed")
+	UpdateJudgeError = errors.New("process protection update Judge failed")
 )
 
 func SplitCmd(cmd string) (workdir string, binary string, argv string) {
