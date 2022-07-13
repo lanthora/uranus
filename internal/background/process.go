@@ -44,11 +44,6 @@ func NewProcessWorker(dataSourceName string) *ProcessWorker {
 }
 
 func (w *ProcessWorker) Init() (err error) {
-	w.running = true
-	err = w.conn.Connect()
-	if err != nil {
-		return
-	}
 	err = w.initDB()
 	if err != nil {
 		return
@@ -60,11 +55,20 @@ func (w *ProcessWorker) Init() (err error) {
 		return
 	}
 
-	judge, err := w.config.GetInteger(config.ProcessProtectionMode)
+	err = w.initTrustedCmd()
 	if err != nil {
-		judge = process.StatusJudgeDisable
+		return
 	}
-	process.UpdateJudge(judge)
+
+	return
+}
+
+func (w *ProcessWorker) Start() (err error) {
+	w.running = true
+	err = w.conn.Connect()
+	if err != nil {
+		return
+	}
 
 	err = w.conn.Send(`{"type":"user::msg::sub","section":"audit::proc::report"}`)
 	if err != nil {
@@ -75,8 +79,13 @@ func (w *ProcessWorker) Init() (err error) {
 		return
 	}
 
-	err = w.initTrustedCmd()
+	judge, err := w.config.GetInteger(config.ProcessProtectionMode)
 	if err != nil {
+		judge = process.StatusJudgeDisable
+	}
+
+	if ok := process.UpdateJudge(judge); !ok {
+		err = process.UpdateJudgeError
 		return
 	}
 
@@ -88,17 +97,12 @@ func (w *ProcessWorker) Init() (err error) {
 
 	if status != process.StatusEnable {
 		return
-
 	}
 
 	if ok := process.Enable(); !ok {
 		err = process.EnableError
 		return
 	}
-	return
-}
-
-func (w *ProcessWorker) Start() (err error) {
 	w.wg.Add(1)
 	go w.run()
 	return
