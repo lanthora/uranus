@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//go:embed webui
+//go:embed webui/*
 var staticFS embed.FS
 
 var contentType = map[string]string{
