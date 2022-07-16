@@ -30,12 +30,16 @@ const (
 )
 
 var (
-	EnableError      = errors.New("process protection enable failed")
-	UpdateJudgeError = errors.New("process protection update Judge failed")
+	ErrorEnable      = errors.New("process protection enable failed")
+	ErrorUpdateJudge = errors.New("process protection update Judge failed")
+	ErrorInvalidCmd  = errors.New("invalid cmd")
 )
 
-func SplitCmd(cmd string) (workdir string, binary string, argv string) {
+func SplitCmd(cmd string) (workdir, binary, argv string, err error) {
 	raw := strings.Split(cmd, "\u001f")
+	if len(raw) < 3 {
+		err = ErrorInvalidCmd
+	}
 	workdir = raw[0]
 	binary = raw[1]
 	argv = raw[2]

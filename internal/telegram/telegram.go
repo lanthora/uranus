@@ -107,24 +107,22 @@ func (w *TelegramWorker) runReportToOwner() {
 			logrus.Error(err)
 			continue
 		}
-
+		html := ""
 		switch doc["type"].(string) {
 		case "audit::proc::report":
-			html := RenderAuditProcReport(msg)
-			w.bot.SendHtmlToOwner(html)
+			html = RenderAuditProcReport(msg)
 		case "user::msg::sub":
-			html := RenderUserMsgSub(msg)
-			w.bot.SendHtmlToOwner(html)
+			html = RenderUserMsgSub(msg)
 		case "user::msg::unsub":
-			html := RenderUserMsgUnsub(msg)
-			w.bot.SendHtmlToOwner(html)
+			html = RenderUserMsgUnsub(msg)
 		case "kernel::proc::enable":
-			html := RenderKernelProcEnable(msg)
-			w.bot.SendHtmlToOwner(html)
+			html = RenderKernelProcEnable(msg)
 		case "kernel::proc::disable":
-			html := RenderKernelProcDisable(msg)
+			html = RenderKernelProcDisable(msg)
+		}
+		if html != "" {
 			w.bot.SendHtmlToOwner(html)
-		default:
+		} else {
 			w.bot.SendTextToOwner(msg)
 		}
 	}

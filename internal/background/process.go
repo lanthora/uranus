@@ -85,7 +85,7 @@ func (w *ProcessWorker) Start() (err error) {
 	}
 
 	if ok := process.UpdateJudge(judge); !ok {
-		err = process.UpdateJudgeError
+		err = process.ErrorUpdateJudge
 		return
 	}
 
@@ -100,7 +100,7 @@ func (w *ProcessWorker) Start() (err error) {
 	}
 
 	if ok := process.Enable(); !ok {
-		err = process.EnableError
+		err = process.ErrorEnable
 		return
 	}
 	w.wg.Add(1)
@@ -241,7 +241,11 @@ func (w *ProcessWorker) updateCmd(cmd string, judge int) (err error) {
 		return
 	}
 	defer stmt.Close()
-	workdir, binary, argv := process.SplitCmd(cmd)
+	workdir, binary, argv, err := process.SplitCmd(cmd)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
 	_, err = stmt.Exec(cmd, workdir, binary, argv, judge, status)
 	if err != nil {
 		logrus.Error(err)
