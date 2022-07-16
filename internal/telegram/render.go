@@ -16,7 +16,10 @@ func RenderAuditProcReport(text string) (richText string) {
 	}
 	judge := doc["judge"].(float64)
 
-	workdir, binary, argv := process.SplitCmd(doc["cmd"].(string))
+	workdir, binary, argv, err := process.SplitCmd(doc["cmd"].(string))
+	if err != nil {
+		return
+	}
 	richText += "<b>进程审计</b>\n\n"
 	richText += "工作目录: "
 	richText += fmt.Sprintf("<u>%s</u>\n\n", workdir)
