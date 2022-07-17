@@ -119,12 +119,12 @@ func (w *Worker) processAuditUpdate(context *gin.Context) {
 	}
 
 	if err := w.config.SetInteger(config.ProcessProtectionMode, request.Judge); err != nil {
-		render.Status(context, render.StatusUpdateProcessJudgeFailed)
+		render.Status(context, render.StatusProcessUpdateJudgeFailed)
 		return
 	}
 	ok := process.UpdateJudge(request.Judge)
 	if !ok {
-		render.Status(context, render.StatusUpdateProcessJudgeFailed)
+		render.Status(context, render.StatusProcessUpdateJudgeFailed)
 		return
 	}
 	render.Status(context, render.StatusSuccess)
@@ -143,7 +143,7 @@ func (w *Worker) processEventList(context *gin.Context) {
 
 	events, err := w.queryLimitOffset(request.Limit, request.Offset)
 	if err != nil {
-		render.Status(context, render.StatusQueryProcessEventFailed)
+		render.Status(context, render.StatusProcessQueryEventFailed)
 		return
 	}
 	render.Success(context, events)
@@ -174,13 +174,13 @@ func (w *Worker) processPolicyUpdate(context *gin.Context) {
 	}
 
 	if err != nil {
-		render.Status(context, render.StatusUpdateProcessEventStatusFailed)
+		render.Status(context, render.StatusProcessUpdatePolicyFailed)
 		return
 	}
 
 	ok := w.updateStatus(uint64(request.ID), request.Status)
 	if !ok {
-		render.Status(context, render.StatusUpdateProcessEventStatusFailed)
+		render.Status(context, render.StatusProcessUpdatePolicyFailed)
 		return
 	}
 	render.Status(context, render.StatusSuccess)

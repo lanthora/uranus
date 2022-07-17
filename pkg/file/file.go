@@ -22,10 +22,15 @@ const (
 )
 
 const (
-	StatusNormal       = 0
-	StatusUnknown      = 1
-	StatusConflict     = 2
-	StatusFileNotExist = 3
+	StatusPolicyNormal       = 0
+	StatusPolicyUnknown      = 1
+	StatusPolicyConflict     = 2
+	StatusPolicyFileNotExist = 3
+)
+
+const (
+	StatusEventUnread = 0
+	StatusEventRead   = 1
 )
 
 var (
@@ -50,6 +55,7 @@ type Event struct {
 	Perm      int    `json:"perm"`
 	Timestamp int64  `json:"timestamp"`
 	Policy    uint64 `json:"policy"`
+	Status    int    `json:"status"`
 }
 
 func SetPolicy(path string, perm, flag int) (fsid, ino uint64, status int, err error) {
@@ -85,13 +91,13 @@ func SetPolicy(path string, perm, flag int) (fsid, ino uint64, status int, err e
 
 	switch response.Code {
 	case 0:
-		status = StatusNormal
+		status = StatusPolicyNormal
 	case -2:
-		status = StatusFileNotExist
+		status = StatusPolicyFileNotExist
 	case -17:
-		status = StatusConflict
+		status = StatusPolicyConflict
 	default:
-		status = StatusUnknown
+		status = StatusPolicyUnknown
 	}
 	return
 }

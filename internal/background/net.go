@@ -184,7 +184,6 @@ func (w *NetWorker) handleMsg(msg string) {
 	err := json.Unmarshal([]byte(msg), &event)
 	if err != nil {
 		logrus.Error(err)
-		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		return
 	}
 	switch event.Type {

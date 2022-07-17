@@ -71,26 +71,26 @@ func (w *Worker) middleware() gin.HandlerFunc {
 		}
 		session, err := context.Cookie("session")
 		if err != nil {
-			render.Status(context, render.StatusNotLoggedIn)
+			render.Status(context, render.StatusUserNotLoggedIn)
 			context.Abort()
 			return
 		}
 
 		user, ok := w.loggedUser.Get(session)
 		if !ok {
-			render.Status(context, render.StatusNotLoggedIn)
+			render.Status(context, render.StatusUserNotLoggedIn)
 			context.Abort()
 			return
 		}
 
 		g, err := glob.Compile(user.(User).Permissions)
 		if err != nil {
-			render.Status(context, render.StatusPermissionDenied)
+			render.Status(context, render.StatusUserPermissionDenied)
 			context.Abort()
 			return
 		}
 		if !g.Match(context.Request.URL.Path) {
-			render.Status(context, render.StatusPermissionDenied)
+			render.Status(context, render.StatusUserPermissionDenied)
 			context.Abort()
 			return
 		}
@@ -116,7 +116,7 @@ func (w *Worker) userLogin(context *gin.Context) {
 
 	ok, err := w.checkUserPassword(request.Username, request.Password)
 	if err == sql.ErrNoRows {
-		render.Status(context, render.StatusLoginFaild)
+		render.Status(context, render.StatusUserLoginFaild)
 		return
 	}
 
@@ -126,7 +126,7 @@ func (w *Worker) userLogin(context *gin.Context) {
 	}
 
 	if !ok {
-		render.Status(context, render.StatusLoginFaild)
+		render.Status(context, render.StatusUserLoginFaild)
 		return
 	}
 
@@ -148,13 +148,13 @@ func (w *Worker) userAlive(context *gin.Context) {
 func (w *Worker) userInfo(context *gin.Context) {
 	session, err := context.Cookie("session")
 	if err != nil {
-		render.Status(context, render.StatusNotLoggedIn)
+		render.Status(context, render.StatusUserNotLoggedIn)
 		return
 	}
 
 	current, ok := w.loggedUser.Get(session)
 	if !ok {
-		render.Status(context, render.StatusNotLoggedIn)
+		render.Status(context, render.StatusUserNotLoggedIn)
 		return
 	}
 	updateSession(context, session)
@@ -183,7 +183,7 @@ func (w *Worker) userAdd(context *gin.Context) {
 	}
 
 	if err := w.createUser(request.Username, request.Password, request.AliasName, request.Permissions); err != nil {
-		render.Status(context, render.StatusCreateUserFailed)
+		render.Status(context, render.StatusUserCreateUserFailed)
 		return
 	}
 	render.Status(context, render.StatusSuccess)
@@ -192,7 +192,7 @@ func (w *Worker) userAdd(context *gin.Context) {
 func (w *Worker) userQuery(context *gin.Context) {
 	users, err := w.queryAllUser()
 	if err != nil {
-		render.Status(context, render.StatusQueryUserFailed)
+		render.Status(context, render.StatusUserQueryUserFailed)
 		return
 	}
 	render.Success(context, users)
@@ -208,7 +208,7 @@ func (w *Worker) userDelete(context *gin.Context) {
 		return
 	}
 	if ok := w.deleteUser(request.UserID); !ok {
-		render.Status(context, render.StatusDeleteUserFailed)
+		render.Status(context, render.StatusUserDeleteUserFailed)
 		return
 	}
 	render.Status(context, render.StatusSuccess)
@@ -229,7 +229,7 @@ func (w *Worker) userUpdate(context *gin.Context) {
 	}
 
 	if ok := w.updateUserInfo(request.UserID, request.Username, request.Password, request.AliasName, request.Permissions); !ok {
-		render.Status(context, render.StatusCreateUserFailed)
+		render.Status(context, render.StatusUserCreateUserFailed)
 		return
 	}
 	render.Status(context, render.StatusSuccess)

@@ -13,11 +13,12 @@ import (
 const (
 	sqlInsertFilePolicy           = `insert into file_policy(path,fsid,ino,perm,timestamp,status) values(?,?,?,?,?,?)`
 	sqlUpdateFilePolicyById       = `update file_policy set fsid=?,ino=?,perm=?,timestamp=?,status=? where id=?`
-	sqlQueryFileEventLimitOffset  = `select id,path,fsid,ino,perm,timestamp,policy from file_event limit ? offset ?`
+	sqlQueryFileEventLimitOffset  = `select id,path,fsid,ino,perm,timestamp,policy,status from file_event limit ? offset ?`
 	sqlQueryFilePolicyById        = `select id,path,fsid,ino,perm,timestamp,status from file_policy where id=?`
 	sqlQueryFilePolicyLimitOffset = `select id,path,fsid,ino,perm,timestamp,status from file_policy limit ? offset ?`
 	sqlDeleteFilePolicyById       = `delete from file_policy where id=?`
 	sqlDeleteFileEventById        = `delete from file_event where id=?`
+	sqlUpdateFileEventStatusById  = `update file_event set status=? where id=?`
 )
 
 func (w *Worker) insertFilePolicy(path string, fsid, ino uint64, perm, status int) (err error) {
@@ -34,7 +35,7 @@ func (w *Worker) insertFilePolicy(path string, fsid, ino uint64, perm, status in
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(path, fsid, ino, perm, time.Now().Unix(), status)
+	_, err = stmt.Exec(path, int64(fsid), int64(ino), perm, time.Now().Unix(), status)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -86,7 +87,7 @@ func (w *Worker) queryFileEventOffsetLimit(limit, offset int) (events []file.Eve
 	defer rows.Close()
 	for rows.Next() {
 		e := file.Event{}
-		err = rows.Scan(&e.ID, &e.Path, &e.Fsid, &e.Ino, &e.Perm, &e.Timestamp, &e.Policy)
+		err = rows.Scan(&e.ID, &e.Path, &e.Fsid, &e.Ino, &e.Perm, &e.Timestamp, &e.Policy, &e.Status)
 		if err != nil {
 			logrus.Error(err)
 			return
@@ -191,6 +192,28 @@ func (w *Worker) deleteFileEventById(id int) (err error) {
 	defer stmt.Close()
 
 	_, err = stmt.Exec(id)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	return
+}
+
+func (w *Worker) updateFileEventStatusById(status, id int) (err error) {
+	db, err := sql.Open("sqlite3", w.dataSourceName)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	defer db.Close()
+	stmt, err := db.Prepare(sqlUpdateFileEventStatusById)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(status, id)
 	if err != nil {
 		logrus.Error(err)
 		return
