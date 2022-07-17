@@ -19,13 +19,13 @@ import (
 )
 
 const (
-	sqlCreateFilePolicyTable       = `create table if not exists file_policy(id integer primary key autoincrement, path text not null, fsid blob, ino blob, perm integer not null, timestamp integer not null, status integer not null)`
-	sqlCreateFileEventTable        = `create table if not exists file_event(id integer primary key autoincrement, path text not null, fsid blob, ino blob, perm integer not null, timestamp integer not null, policy integer not null)`
+	sqlCreateFilePolicyTable       = `create table if not exists file_policy(id integer primary key autoincrement, path text not null, fsid integer, ino integer, perm integer not null, timestamp integer not null, status integer not null)`
+	sqlCreateFileEventTable        = `create table if not exists file_event(id integer primary key autoincrement, path text not null, fsid integer, ino integer, perm integer not null, timestamp integer not null, policy integer not null, status integer not null)`
 	sqlQueryFilePolicy             = `select id,path,fsid,ino,perm from file_policy`
 	sqlUpdateFilePolicyFsidInoById = `update file_policy set fsid=?,ino=?,timestamp=? where id=?`
 	sqlUpdateFilePolicyStatusById  = `update file_policy set status=? where id=?`
 	sqlQueryFilePolicyIdByFsidIno  = `select id from file_policy where fsid=? and ino=? and status=0`
-	sqlInsertFileEvent             = `insert into file_event(path,fsid,ino,perm,timestamp,policy) values(?,?,?,?,?,?)`
+	sqlInsertFileEvent             = `insert into file_event(path,fsid,ino,perm,timestamp,policy,status) values(?,?,?,?,?,?,?)`
 )
 
 type FileWorker struct {
@@ -155,7 +155,6 @@ func (w *FileWorker) handleMsg(msg string) {
 		err = w.handleFileEvent(event.Path, event.Fsid, event.Ino, event.Perm)
 		if err != nil {
 			logrus.Error(err)
-			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		}
 	case "osinfo::report":
 		w.dog.Kick()
@@ -295,7 +294,7 @@ func (w *FileWorker) updateFilePolcyFsidInoById(fsid, ino, id uint64) (err error
 		return
 	}
 	defer stmt.Close()
-	result, err := stmt.Exec(fsid, ino, time.Now().Unix(), id)
+	result, err := stmt.Exec(int64(fsid), int64(ino), time.Now().Unix(), id)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -355,8 +354,8 @@ func (w *FileWorker) handleFileEvent(path string, fsid, ino uint64, perm int) (e
 	}
 	defer stmt.Close()
 
-	policyId := uint64(0)
-	err = stmt.QueryRow(fsid, ino).Scan(&policyId)
+	policyId := int64(0)
+	err = stmt.QueryRow(int64(fsid), int64(ino)).Scan(&policyId)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -369,7 +368,7 @@ func (w *FileWorker) handleFileEvent(path string, fsid, ino uint64, perm int) (e
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(path, fsid, ino, perm, time.Now().Unix(), policyId)
+	_, err = stmt.Exec(path, int(fsid), int(ino), perm, time.Now().Unix(), policyId, file.StatusEventUnread)
 	if err != nil {
 		logrus.Error(err)
 		return

@@ -8,83 +8,97 @@ import (
 )
 
 const (
-	StatusSuccess                        = 0
-	StatusUnknownError                   = 1
-	StatusNotLoggedIn                    = 2
-	StatusPermissionDenied               = 3
-	StatusInvalidArgument                = 4
-	StatusLoginFaild                     = 5
-	StatusCreateUserFailed               = 6
-	StatusQueryUserFailed                = 7
-	StatusUpdateUserFailed               = 8
-	StatusDeleteUserFailed               = 9
-	StatusUpdateProcessJudgeFailed       = 10
-	StatusUpdateProcessEventStatusFailed = 11
-	StatusQueryProcessEventFailed        = 12
-	StatusProcessEnableFailed            = 13
-	StatusProcessDisableFailed           = 14
-	StatusAddFilePolicyConflict          = 15
-	StatusAddFilePolicyFileNotExist      = 16
-	StatusAddFilePolicyFailed            = 17
-	StatusDeleteFilePolicyFailed         = 18
-	StatusQueryFilePolicyListFailed      = 19
-	StatusQueryFilePolicyByIdFailed      = 20
-	StatusQueryFileEventListFailed       = 21
-	StatusDeleteFileEventFailed          = 22
-	StatusUpdateFilePolicyConflict       = 23
-	StatusUpdateFilePolicyFileNotExist   = 24
-	StatusUpdateFilePolicyFailed         = 25
-	StatusFileEnableFailed               = 26
-	StatusFileDisableFailed              = 27
-	StatusProcessTrustUpdateFailed       = 28
-	StatusProcessGetTrustStatusFailed    = 29
-	StatusNetEnableFailed                = 30
-	StatusNetDisableFailed               = 31
-	StatusAddNetPolicyFailed             = 32
-	StatusAddNetPolicyDatabaseFailed     = 33
-	StatusDeleteNetPolicyFailed          = 34
-	StatusDeleteNetPolicyDatabaseFailed  = 35
-	StatusQueryNetPolicyListFailed       = 36
+	StatusSuccess = iota + 0
+	StatusUnknownError
+	StatusInvalidArgument
 )
 
-var messages = [...]string{
-	StatusSuccess:                        "success",
-	StatusUnknownError:                   "unknown error",
-	StatusNotLoggedIn:                    "not logged in",
-	StatusPermissionDenied:               "permission denied",
-	StatusInvalidArgument:                "invalid argument",
-	StatusLoginFaild:                     "login failed",
-	StatusCreateUserFailed:               "create user failed",
-	StatusQueryUserFailed:                "query user failed",
-	StatusUpdateUserFailed:               "update user failed",
-	StatusDeleteUserFailed:               "delete user failed",
-	StatusUpdateProcessJudgeFailed:       "update process judge failed",
-	StatusUpdateProcessEventStatusFailed: "update process event status failed",
-	StatusQueryProcessEventFailed:        "query process event failed",
-	StatusProcessEnableFailed:            "process enable failed",
-	StatusProcessDisableFailed:           "process disable failed",
-	StatusAddFilePolicyConflict:          "add file policy conflict",
-	StatusAddFilePolicyFileNotExist:      "add file policy file not exist",
-	StatusAddFilePolicyFailed:            "add file policy failed",
-	StatusDeleteFilePolicyFailed:         "delete file policy failed",
-	StatusQueryFilePolicyListFailed:      "query file policy list failed",
-	StatusQueryFilePolicyByIdFailed:      "query file policy by id failed",
-	StatusQueryFileEventListFailed:       "query file event list failed",
-	StatusDeleteFileEventFailed:          "delete file event failed",
-	StatusUpdateFilePolicyConflict:       "update file policy conflict",
-	StatusUpdateFilePolicyFileNotExist:   "update file policy file not exist",
-	StatusUpdateFilePolicyFailed:         "update file policy failed",
-	StatusFileEnableFailed:               "file enable failed",
-	StatusFileDisableFailed:              "file disable failed",
-	StatusProcessTrustUpdateFailed:       "process trust update failed",
-	StatusProcessGetTrustStatusFailed:    "process get status status failed",
-	StatusNetEnableFailed:                "net enable failed",
-	StatusNetDisableFailed:               "net disable failed",
-	StatusAddNetPolicyFailed:             "add net policy failed",
-	StatusAddNetPolicyDatabaseFailed:     "add net policy database failed",
-	StatusDeleteNetPolicyFailed:          "delete net policy failed",
-	StatusDeleteNetPolicyDatabaseFailed:  "delete net policy databse failed",
-	StatusQueryNetPolicyListFailed:       "query net policy list failed",
+const (
+	StatusUserNotLoggedIn = iota + 100
+	StatusUserPermissionDenied
+	StatusUserLoginFaild
+	StatusUserCreateUserFailed
+	StatusUserQueryUserFailed
+	StatusUserUpdateUserFailed
+	StatusUserDeleteUserFailed
+)
+
+const (
+	StatusProcessEnableFailed = iota + 200
+	StatusProcessDisableFailed
+	StatusProcessUpdateJudgeFailed
+	StatusProcessUpdatePolicyFailed
+	StatusProcessQueryEventFailed
+	StatusProcessTrustUpdateFailed
+	StatusProcessGetTrustStatusFailed
+)
+
+const (
+	StatusFileEnableFailed = iota + 300
+	StatusFileDisableFailed
+	StatusFileAddPolicyConflict
+	StatusFileAddPolicyFileNotExist
+	StatusFileAddPolicyFailed
+	StatusFileDeletePolicyFailed
+	StatusFileQueryPolicyListFailed
+	StatusFileQueryPolicyByIdFailed
+	StatusFileQueryEventListFailed
+	StatusFileDeleteEventFailed
+	StatusFileUpdatePolicyConflict
+	StatusFileUpdatePolicyFileNotExist
+	StatusFileUpdatePolicyFailed
+	StatusFileUpdateEventStatusFailed
+)
+
+const (
+	StatusNetEnableFailed = iota + 400
+	StatusNetDisableFailed
+	StatusNetAddPolicyFailed
+	StatusNetAddPolicyDatabaseFailed
+	StatusNetDeletePolicyFailed
+	StatusNetDeletePolicyDatabaseFailed
+	StatusNetQueryPolicyListFailed
+)
+
+var messages = map[int]string{
+	StatusSuccess:                       "成功",
+	StatusUnknownError:                  "未知错误",
+	StatusInvalidArgument:               "无效参数",
+	StatusUserNotLoggedIn:               "未登录",
+	StatusUserPermissionDenied:          "无权限",
+	StatusUserLoginFaild:                "登录失败",
+	StatusUserCreateUserFailed:          "创建用户失败",
+	StatusUserQueryUserFailed:           "查询用户失败",
+	StatusUserUpdateUserFailed:          "更新用户失败",
+	StatusUserDeleteUserFailed:          "删除用户失败",
+	StatusProcessEnableFailed:           "启动进程防护模块失败",
+	StatusProcessDisableFailed:          "关闭进程防护模块失败",
+	StatusProcessUpdateJudgeFailed:      "更新进程防护模式失败",
+	StatusProcessUpdatePolicyFailed:     "更新进程策略失败",
+	StatusProcessQueryEventFailed:       "查询进程事件失败",
+	StatusProcessTrustUpdateFailed:      "更新进程默认信任状态失败",
+	StatusProcessGetTrustStatusFailed:   "获取进程默认信任状态失败",
+	StatusFileEnableFailed:              "启动文件防护模块失败",
+	StatusFileDisableFailed:             "关闭文件防护模块失败",
+	StatusFileAddPolicyConflict:         "添加文件策略冲突",
+	StatusFileAddPolicyFileNotExist:     "添加文件策略文件不存在",
+	StatusFileAddPolicyFailed:           "添加文件策略失败",
+	StatusFileDeletePolicyFailed:        "删除文件策略失败",
+	StatusFileQueryPolicyListFailed:     "查询文件策略列表失败",
+	StatusFileQueryPolicyByIdFailed:     "查询文件策略失败",
+	StatusFileQueryEventListFailed:      "查询文件事件列表失败",
+	StatusFileDeleteEventFailed:         "删除文件事件失败",
+	StatusFileUpdatePolicyConflict:      "更新文件策略冲突",
+	StatusFileUpdatePolicyFileNotExist:  "更新文件策略文件不存在",
+	StatusFileUpdatePolicyFailed:        "更新文件策略失败",
+	StatusFileUpdateEventStatusFailed:   "更新文件事件状态失败",
+	StatusNetEnableFailed:               "启动网络防护模块失败",
+	StatusNetDisableFailed:              "关闭网络防护模块失败",
+	StatusNetAddPolicyFailed:            "添加网络策略失败",
+	StatusNetAddPolicyDatabaseFailed:    "添加网络策略数据库失败",
+	StatusNetDeletePolicyFailed:         "删除网络策略失败",
+	StatusNetDeletePolicyDatabaseFailed: "删除网络策略数据库失败",
+	StatusNetQueryPolicyListFailed:      "查询网络策略列表失败",
 }
 
 func Success(context *gin.Context, data interface{}) {

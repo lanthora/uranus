@@ -38,6 +38,7 @@ func Init(engine *gin.Engine, dataSourceName string) (err error) {
 	w.engine.POST("/file/policy/query", w.filePolicyQuery)
 	w.engine.POST("/file/event/list", w.fileEventList)
 	w.engine.POST("/file/event/delete", w.fileEventDelete)
+	w.engine.POST("/file/event/update", w.fileEventUpdate)
 	return
 }
 
@@ -93,24 +94,24 @@ func (w *Worker) filePolicyAdd(context *gin.Context) {
 		return
 	}
 	fsid, ino, status, err := file.SetPolicy(request.Path, request.Perm, file.FlagNew)
-	if err != nil || status == file.StatusUnknown {
+	if err != nil || status == file.StatusPolicyUnknown {
 		render.Status(context, render.StatusUnknownError)
 		return
 	}
 
-	if status == file.StatusConflict {
-		render.Status(context, render.StatusAddFilePolicyConflict)
+	if status == file.StatusPolicyConflict {
+		render.Status(context, render.StatusFileAddPolicyConflict)
 		return
 	}
 
-	if status == file.StatusConflict {
-		render.Status(context, render.StatusAddFilePolicyFileNotExist)
+	if status == file.StatusPolicyConflict {
+		render.Status(context, render.StatusFileAddPolicyFileNotExist)
 		return
 	}
 
-	err = w.insertFilePolicy(request.Path, fsid, ino, request.Perm, file.StatusNormal)
+	err = w.insertFilePolicy(request.Path, fsid, ino, request.Perm, file.StatusPolicyNormal)
 	if err != nil {
-		render.Status(context, render.StatusAddFilePolicyFailed)
+		render.Status(context, render.StatusFileAddPolicyFailed)
 		return
 	}
 
@@ -135,25 +136,25 @@ func (w *Worker) filePolicyUpdate(context *gin.Context) {
 	}
 
 	fsid, ino, status, err := file.SetPolicy(policy.Path, request.Perm, file.FlagUpdate)
-	if err != nil || status == file.StatusUnknown {
+	if err != nil || status == file.StatusPolicyUnknown {
 		render.Status(context, render.StatusUnknownError)
 		return
 	}
 
-	if status == file.StatusConflict {
-		render.Status(context, render.StatusUpdateFilePolicyConflict)
+	if status == file.StatusPolicyConflict {
+		render.Status(context, render.StatusFileUpdatePolicyConflict)
 		return
 	}
 
-	if status == file.StatusConflict {
-		render.Status(context, render.StatusUpdateFilePolicyFileNotExist)
+	if status == file.StatusPolicyConflict {
+		render.Status(context, render.StatusFileUpdatePolicyFileNotExist)
 		return
 	}
 
-	err = w.updateFilePolicyById(fsid, ino, request.Perm, file.StatusNormal, request.ID)
+	err = w.updateFilePolicyById(fsid, ino, request.Perm, file.StatusPolicyNormal, request.ID)
 	if err != nil {
 		logrus.Error(err)
-		render.Status(context, render.StatusUpdateFilePolicyFailed)
+		render.Status(context, render.StatusFileUpdatePolicyFailed)
 		return
 	}
 
@@ -184,7 +185,7 @@ func (w *Worker) filePolicyDelete(context *gin.Context) {
 
 	err = w.deleteFilePolicyById(request.ID)
 	if err != nil {
-		render.Status(context, render.StatusDeleteFilePolicyFailed)
+		render.Status(context, render.StatusFileDeletePolicyFailed)
 		return
 	}
 	render.Status(context, render.StatusSuccess)
@@ -209,7 +210,7 @@ func (w *Worker) filePolicyList(context *gin.Context) {
 	policies, err := w.queryFilePolicyLimitOffset(request.Limit, request.Offset)
 	if err != nil {
 		logrus.Error(err)
-		render.Status(context, render.StatusQueryFilePolicyListFailed)
+		render.Status(context, render.StatusFileQueryPolicyListFailed)
 		return
 	}
 	render.Success(context, policies)
@@ -227,7 +228,7 @@ func (w *Worker) filePolicyQuery(context *gin.Context) {
 
 	policy, err := w.queryFilePolicyById(request.ID)
 	if err != nil {
-		render.Status(context, render.StatusQueryFilePolicyByIdFailed)
+		render.Status(context, render.StatusFileQueryPolicyByIdFailed)
 		return
 	}
 	render.Success(context, policy)
@@ -246,7 +247,7 @@ func (w *Worker) fileEventList(context *gin.Context) {
 
 	events, err := w.queryFileEventOffsetLimit(request.Limit, request.Offset)
 	if err != nil {
-		render.Status(context, render.StatusQueryProcessEventFailed)
+		render.Status(context, render.StatusProcessQueryEventFailed)
 		return
 	}
 	render.Success(context, events)
@@ -264,7 +265,26 @@ func (w *Worker) fileEventDelete(context *gin.Context) {
 
 	err := w.deleteFileEventById(request.ID)
 	if err != nil {
-		render.Status(context, render.StatusDeleteFileEventFailed)
+		render.Status(context, render.StatusFileDeleteEventFailed)
+		return
+	}
+	render.Status(context, render.StatusSuccess)
+}
+
+func (w *Worker) fileEventUpdate(context *gin.Context) {
+	request := struct {
+		Status int `json:"status" binding:"number"`
+		ID     int `json:"id" binding:"number"`
+	}{}
+
+	if err := context.ShouldBindJSON(&request); err != nil {
+		render.Status(context, render.StatusInvalidArgument)
+		return
+	}
+
+	err := w.updateFileEventStatusById(request.Status, request.ID)
+	if err != nil {
+		render.Status(context, render.StatusFileUpdateEventStatusFailed)
 		return
 	}
 	render.Status(context, render.StatusSuccess)

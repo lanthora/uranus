@@ -87,13 +87,13 @@ func (w *Worker) netPolicyAdd(context *gin.Context) {
 
 	id, err := w.insertNetPolicy(&request)
 	if err != nil {
-		render.Status(context, render.StatusAddNetPolicyDatabaseFailed)
+		render.Status(context, render.StatusNetAddPolicyDatabaseFailed)
 		return
 	}
 
 	request.ID = id
 	if ok := net.AddPolicy(request); !ok {
-		render.Status(context, render.StatusAddNetPolicyFailed)
+		render.Status(context, render.StatusNetAddPolicyFailed)
 		return
 	}
 
@@ -112,13 +112,13 @@ func (w *Worker) netPolicyDelete(context *gin.Context) {
 
 	ok := net.DeletePolicy(request.ID)
 	if !ok {
-		render.Status(context, render.StatusDeleteNetPolicyFailed)
+		render.Status(context, render.StatusNetDeletePolicyFailed)
 		return
 	}
 
 	err := w.deleteNetPolicyById(request.ID)
 	if err != nil {
-		render.Status(context, render.StatusDeleteNetPolicyDatabaseFailed)
+		render.Status(context, render.StatusNetDeletePolicyDatabaseFailed)
 		return
 	}
 
@@ -139,7 +139,7 @@ func (w *Worker) netPolicyList(context *gin.Context) {
 	policies, err := w.queryNetPolicyLimitOffset(request.Limit, request.Offset)
 	if err != nil {
 		logrus.Error(err)
-		render.Status(context, render.StatusQueryNetPolicyListFailed)
+		render.Status(context, render.StatusNetQueryPolicyListFailed)
 		return
 	}
 	render.Success(context, policies)
