@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"syscall"
 	"time"
 	"uranus/internal/config"
 	"uranus/pkg/connector"
@@ -62,6 +61,22 @@ func (w *FileWorker) Init() (err error) {
 		return
 	}
 
+	status, err := w.config.GetInteger(config.FileModuleStatus)
+	if err != nil {
+		err = nil
+		return
+	}
+
+	if status != file.StatusEnable {
+		return
+	}
+
+	if ok := file.Enable(); !ok {
+		err = file.EnableError
+		logrus.Error(err)
+		return
+	}
+
 	return
 }
 func (w *FileWorker) Start() (err error) {
@@ -79,22 +94,6 @@ func (w *FileWorker) Start() (err error) {
 	}
 	err = w.conn.Send(`{"type":"user::msg::sub","section":"osinfo::report"}`)
 	if err != nil {
-		logrus.Error(err)
-		return
-	}
-
-	status, err := w.config.GetInteger(config.FileModuleStatus)
-	if err != nil {
-		err = nil
-		return
-	}
-
-	if status != file.StatusEnable {
-		return
-	}
-
-	if ok := file.Enable(); !ok {
-		err = file.EnableError
 		logrus.Error(err)
 		return
 	}
@@ -147,7 +146,6 @@ func (w *FileWorker) handleMsg(msg string) {
 	err := json.Unmarshal([]byte(msg), &event)
 	if err != nil {
 		logrus.Error(err)
-		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		return
 	}
 	switch event.Type {
@@ -156,8 +154,7 @@ func (w *FileWorker) handleMsg(msg string) {
 		if err != nil {
 			logrus.Error(err)
 		}
-	case "osinfo::report":
-		w.dog.Kick()
+	default:
 	}
 }
 
@@ -165,22 +162,21 @@ func (w *FileWorker) run() {
 	defer w.wg.Done()
 	w.dog = watchdog.New(10*time.Second, func() {
 		logrus.Error("osinfo::report timeout")
-		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 	})
 	for w.running {
 		msg, err := w.conn.Recv()
 
 		if !w.running {
+			logrus.Info("file worker exit")
 			break
 		}
 
 		if err != nil {
 			logrus.Error(err)
-			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 			continue
 		}
+		w.dog.Kick()
 		go w.handleMsg(msg)
-
 	}
 }
 

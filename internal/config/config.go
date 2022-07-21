@@ -25,7 +25,7 @@ const (
 const (
 	ProcessModuleStatus     = "process module status"
 	ProcessProtectionMode   = "process protection mode"
-	ProcessCmdDefaultStatus = "Process cmd default status"
+	ProcessCmdDefaultStatus = "process cmd default status"
 	FileModuleStatus        = "file module status"
 	NetModuleStatus         = "net module status"
 )

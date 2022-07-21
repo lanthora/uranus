@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"syscall"
 	"time"
 	"uranus/internal/config"
 	"uranus/pkg/connector"
@@ -56,6 +55,20 @@ func (w *NetWorker) Init() (err error) {
 		return
 	}
 
+	status, err := w.config.GetInteger(config.NetModuleStatus)
+	if err != nil {
+		err = nil
+		return
+	}
+
+	if status != net.StatusEnable {
+		return
+	}
+
+	if ok := net.Enable(); !ok {
+		logrus.Error(net.EnableError)
+	}
+
 	return
 }
 func (w *NetWorker) Start() (err error) {
@@ -70,20 +83,6 @@ func (w *NetWorker) Start() (err error) {
 	err = w.conn.Send(`{"type":"user::msg::sub","section":"osinfo::report"}`)
 	if err != nil {
 		return
-	}
-
-	status, err := w.config.GetInteger(config.NetModuleStatus)
-	if err != nil {
-		err = nil
-		return
-	}
-
-	if status != net.StatusEnable {
-		return
-	}
-
-	if ok := net.Enable(); !ok {
-		logrus.Error(net.EnableError)
 	}
 
 	w.wg.Add(1)
@@ -187,8 +186,7 @@ func (w *NetWorker) handleMsg(msg string) {
 		return
 	}
 	switch event.Type {
-	case "osinfo::report":
-		w.dog.Kick()
+	default:
 	}
 }
 
@@ -196,21 +194,20 @@ func (w *NetWorker) run() {
 	defer w.wg.Done()
 	w.dog = watchdog.New(10*time.Second, func() {
 		logrus.Error("osinfo::report timeout")
-		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 	})
 	for w.running {
 		msg, err := w.conn.Recv()
 
 		if !w.running {
+			logrus.Info("net worker exit")
 			break
 		}
 
 		if err != nil {
 			logrus.Error(err)
-			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 			continue
 		}
+		w.dog.Kick()
 		go w.handleMsg(msg)
-
 	}
 }
