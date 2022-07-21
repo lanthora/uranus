@@ -39,6 +39,7 @@ func SplitCmd(cmd string) (workdir, binary, argv string, err error) {
 	raw := strings.Split(cmd, "\u001f")
 	if len(raw) < 3 {
 		err = ErrorInvalidCmd
+		return
 	}
 	workdir = raw[0]
 	binary = raw[1]
