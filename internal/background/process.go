@@ -60,6 +60,21 @@ func (w *ProcessWorker) Init() (err error) {
 		return
 	}
 
+	status, err := w.config.GetInteger(config.ProcessModuleStatus)
+	if err != nil {
+		err = nil
+		return
+	}
+
+	if status != process.StatusEnable {
+		return
+	}
+
+	if ok := process.Enable(); !ok {
+		err = process.ErrorEnable
+		return
+	}
+
 	return
 }
 
@@ -89,20 +104,6 @@ func (w *ProcessWorker) Start() (err error) {
 		return
 	}
 
-	status, err := w.config.GetInteger(config.ProcessModuleStatus)
-	if err != nil {
-		err = nil
-		return
-	}
-
-	if status != process.StatusEnable {
-		return
-	}
-
-	if ok := process.Enable(); !ok {
-		err = process.ErrorEnable
-		return
-	}
 	w.wg.Add(1)
 	go w.run()
 	return
@@ -273,8 +274,7 @@ func (w *ProcessWorker) handleMsg(msg string) {
 		if err != nil {
 			logrus.Error(err)
 		}
-	case "osinfo::report":
-		w.dog.Kick()
+	default:
 	}
 }
 
@@ -282,21 +282,20 @@ func (w *ProcessWorker) run() {
 	defer w.wg.Done()
 	w.dog = watchdog.New(10*time.Second, func() {
 		logrus.Error("osinfo::report timeout")
-		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 	})
 	for w.running {
 		msg, err := w.conn.Recv()
 
 		if !w.running {
+			logrus.Info("process worker exit")
 			break
 		}
 
 		if err != nil {
 			logrus.Error(err)
-			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 			continue
 		}
-
+		w.dog.Kick()
 		go w.handleMsg(msg)
 	}
 }
