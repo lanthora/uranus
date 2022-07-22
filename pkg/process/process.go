@@ -31,6 +31,7 @@ const (
 
 var (
 	ErrorEnable      = errors.New("process protection enable failed")
+	ErrorDisable     = errors.New("process protection disable failed")
 	ErrorUpdateJudge = errors.New("process protection update Judge failed")
 	ErrorInvalidCmd  = errors.New("invalid cmd")
 )
