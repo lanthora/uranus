@@ -3,10 +3,6 @@ package config
 
 import (
 	"database/sql"
-	"os"
-	"path/filepath"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -31,19 +27,13 @@ const (
 )
 
 type Config struct {
-	dataSourceName string
+	db *sql.DB
 }
 
-func New(dataSourceName string) (c *Config, err error) {
+func New(db *sql.DB) (c *Config, err error) {
 	c = &Config{
-		dataSourceName: dataSourceName,
+		db: db,
 	}
-	os.MkdirAll(filepath.Dir(c.dataSourceName), os.ModeDir)
-	db, err := sql.Open("sqlite3", c.dataSourceName)
-	if err != nil {
-		return
-	}
-	defer db.Close()
 
 	_, err = db.Exec(sqlCreateConfigTable)
 	if err != nil {
@@ -53,14 +43,7 @@ func New(dataSourceName string) (c *Config, err error) {
 }
 
 func (c *Config) SetInteger(key string, value int) (err error) {
-
-	db, err := sql.Open("sqlite3", c.dataSourceName)
-	if err != nil {
-		return
-	}
-	defer db.Close()
-
-	stmt, err := db.Prepare(sqlUpdateInteger)
+	stmt, err := c.db.Prepare(sqlUpdateInteger)
 	if err != nil {
 		return
 	}
@@ -74,7 +57,7 @@ func (c *Config) SetInteger(key string, value int) (err error) {
 		return
 	}
 
-	stmt, err = db.Prepare(sqlInsertInteger)
+	stmt, err = c.db.Prepare(sqlInsertInteger)
 	if err != nil {
 		return
 	}
@@ -88,12 +71,7 @@ func (c *Config) SetInteger(key string, value int) (err error) {
 }
 
 func (c *Config) GetInteger(key string) (value int, err error) {
-	db, err := sql.Open("sqlite3", c.dataSourceName)
-	if err != nil {
-		return
-	}
-	defer db.Close()
-	stmt, err := db.Prepare(sqlQueryInteger)
+	stmt, err := c.db.Prepare(sqlQueryInteger)
 	if err != nil {
 		return
 	}
@@ -104,14 +82,7 @@ func (c *Config) GetInteger(key string) (value int, err error) {
 }
 
 func (c *Config) SetReal(key string, value float64) (err error) {
-
-	db, err := sql.Open("sqlite3", c.dataSourceName)
-	if err != nil {
-		return
-	}
-	defer db.Close()
-
-	stmt, err := db.Prepare(sqlUpdateReal)
+	stmt, err := c.db.Prepare(sqlUpdateReal)
 	if err != nil {
 		return
 	}
@@ -125,7 +96,7 @@ func (c *Config) SetReal(key string, value float64) (err error) {
 		return
 	}
 
-	stmt, err = db.Prepare(sqlInsertReal)
+	stmt, err = c.db.Prepare(sqlInsertReal)
 	if err != nil {
 		return
 	}
@@ -139,12 +110,7 @@ func (c *Config) SetReal(key string, value float64) (err error) {
 }
 
 func (c *Config) GetReal(key string) (value float64, err error) {
-	db, err := sql.Open("sqlite3", c.dataSourceName)
-	if err != nil {
-		return
-	}
-	defer db.Close()
-	stmt, err := db.Prepare(sqlQueryReal)
+	stmt, err := c.db.Prepare(sqlQueryReal)
 	if err != nil {
 		return
 	}
@@ -155,14 +121,7 @@ func (c *Config) GetReal(key string) (value float64, err error) {
 }
 
 func (c *Config) SetText(key string, value string) (err error) {
-
-	db, err := sql.Open("sqlite3", c.dataSourceName)
-	if err != nil {
-		return
-	}
-	defer db.Close()
-
-	stmt, err := db.Prepare(sqlUpdateText)
+	stmt, err := c.db.Prepare(sqlUpdateText)
 	if err != nil {
 		return
 	}
@@ -176,7 +135,7 @@ func (c *Config) SetText(key string, value string) (err error) {
 		return
 	}
 
-	stmt, err = db.Prepare(sqlInsertText)
+	stmt, err = c.db.Prepare(sqlInsertText)
 	if err != nil {
 		return
 	}
@@ -190,12 +149,7 @@ func (c *Config) SetText(key string, value string) (err error) {
 }
 
 func (c *Config) GetText(key string) (value string, err error) {
-	db, err := sql.Open("sqlite3", c.dataSourceName)
-	if err != nil {
-		return
-	}
-	defer db.Close()
-	stmt, err := db.Prepare(sqlQueryText)
+	stmt, err := c.db.Prepare(sqlQueryText)
 	if err != nil {
 		return
 	}

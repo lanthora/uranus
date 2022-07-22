@@ -2,13 +2,16 @@
 package main
 
 import (
+	"database/sql"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"uranus/internal/background"
 	"uranus/internal/telegram"
 	"uranus/pkg/logger"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -31,10 +34,17 @@ func main() {
 	ownerID := config.GetInt64("id")
 	dataSourceName := config.GetString("dsn")
 
-	telegramWorker := telegram.NewWorker(token, ownerID)
-	processWorker := background.NewProcessWorker(dataSourceName)
+	os.MkdirAll(filepath.Dir(dataSourceName), os.ModeDir)
+	db, err := sql.Open("sqlite3", dataSourceName)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	defer db.Close()
 
-	if err := telegram.SetStandaloneMode(dataSourceName); err != nil {
+	telegramWorker := telegram.NewWorker(token, ownerID)
+	processWorker := background.NewProcessWorker(db)
+
+	if err := telegram.SetStandaloneMode(db); err != nil {
 		logrus.Fatal(err)
 	}
 

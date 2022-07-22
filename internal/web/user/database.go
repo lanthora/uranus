@@ -3,13 +3,9 @@ package user
 
 import (
 	"crypto/sha256"
-	"database/sql"
 	"encoding/hex"
-	"os"
-	"path/filepath"
 
 	"github.com/google/uuid"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -24,14 +20,7 @@ const (
 )
 
 func (w *Worker) initUserTable() (err error) {
-	os.MkdirAll(filepath.Dir(w.dataSourceName), os.ModeDir)
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		return
-	}
-	defer db.Close()
-
-	_, err = db.Exec(sqlCreateUserTable)
+	_, err = w.db.Exec(sqlCreateUserTable)
 	if err != nil {
 		return
 	}
@@ -39,12 +28,7 @@ func (w *Worker) initUserTable() (err error) {
 }
 
 func (w *Worker) noUser() bool {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		return false
-	}
-	defer db.Close()
-	stmt, err := db.Prepare(sqlQueryUserCount)
+	stmt, err := w.db.Prepare(sqlQueryUserCount)
 	if err != nil {
 		return false
 	}
@@ -62,13 +46,7 @@ func (w *Worker) createUser(username, password, alias, permissions string) (err 
 	sum := sha256.Sum256([]byte(salt + password))
 	hash := hex.EncodeToString(sum[:])
 
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		return
-	}
-	defer db.Close()
-
-	stmt, err := db.Prepare(sqlInsertUser)
+	stmt, err := w.db.Prepare(sqlInsertUser)
 	if err != nil {
 		return
 	}
@@ -83,12 +61,7 @@ func (w *Worker) createUser(username, password, alias, permissions string) (err 
 }
 
 func (w *Worker) checkUserPassword(username, password string) (ok bool, err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		return
-	}
-	defer db.Close()
-	stmt, err := db.Prepare(sqlQueryPasswordByUsername)
+	stmt, err := w.db.Prepare(sqlQueryPasswordByUsername)
 	if err != nil {
 		return
 	}
@@ -105,12 +78,7 @@ func (w *Worker) checkUserPassword(username, password string) (ok bool, err erro
 
 func (w *Worker) queryUserByUsername(username string) (user User, err error) {
 	user.Username = username
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		return
-	}
-	defer db.Close()
-	stmt, err := db.Prepare(sqlQueryUserByUsername)
+	stmt, err := w.db.Prepare(sqlQueryUserByUsername)
 	if err != nil {
 		return
 	}
@@ -123,13 +91,7 @@ func (w *Worker) queryUserByUsername(username string) (user User, err error) {
 }
 
 func (w *Worker) queryAllUser() (users []User, err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		return
-	}
-	defer db.Close()
-
-	stmt, err := db.Prepare(sqlQueryAllUser)
+	stmt, err := w.db.Prepare(sqlQueryAllUser)
 	if err != nil {
 		return
 	}
@@ -155,13 +117,7 @@ func (w *Worker) queryAllUser() (users []User, err error) {
 }
 
 func (w *Worker) updateUserInfo(id uint64, username, password, alias, permissions string) bool {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		return false
-	}
-	defer db.Close()
-
-	stmt, err := db.Prepare(sqlUpdateUser)
+	stmt, err := w.db.Prepare(sqlUpdateUser)
 	if err != nil {
 		return false
 	}
@@ -183,13 +139,7 @@ func (w *Worker) updateUserInfo(id uint64, username, password, alias, permission
 }
 
 func (w *Worker) deleteUser(id uint64) bool {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		return false
-	}
-	defer db.Close()
-
-	stmt, err := db.Prepare(sqlDeleteUser)
+	stmt, err := w.db.Prepare(sqlDeleteUser)
 	if err != nil {
 		return false
 	}

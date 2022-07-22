@@ -2,6 +2,7 @@
 package control
 
 import (
+	"database/sql"
 	"encoding/json"
 	"time"
 	"uranus/internal/web/render"
@@ -10,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Init(engine *gin.Engine, dataSourceName string) (err error) {
+func Init(engine *gin.Engine, db *sql.DB) (err error) {
 	engine.POST("/control/echo", echo)
 	engine.POST("/control/shutdown", shutdown)
 	return

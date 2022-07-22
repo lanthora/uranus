@@ -2,11 +2,9 @@
 package file
 
 import (
-	"database/sql"
 	"time"
 	"uranus/pkg/file"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,13 +20,7 @@ const (
 )
 
 func (w *Worker) insertFilePolicy(path string, fsid, ino uint64, perm, status int) (err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-	stmt, err := db.Prepare(sqlInsertFilePolicy)
+	stmt, err := w.db.Prepare(sqlInsertFilePolicy)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -44,13 +36,7 @@ func (w *Worker) insertFilePolicy(path string, fsid, ino uint64, perm, status in
 }
 
 func (w *Worker) updateFilePolicyById(fsid, ino uint64, perm, status, id int) (err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-	stmt, err := db.Prepare(sqlUpdateFilePolicyById)
+	stmt, err := w.db.Prepare(sqlUpdateFilePolicyById)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -66,14 +52,7 @@ func (w *Worker) updateFilePolicyById(fsid, ino uint64, perm, status, id int) (e
 }
 
 func (w *Worker) queryFileEventOffsetLimit(limit, offset int) (events []file.Event, err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-
-	stmt, err := db.Prepare(sqlQueryFileEventLimitOffset)
+	stmt, err := w.db.Prepare(sqlQueryFileEventLimitOffset)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -99,13 +78,7 @@ func (w *Worker) queryFileEventOffsetLimit(limit, offset int) (events []file.Eve
 }
 
 func (w *Worker) queryFilePolicyById(id int) (event file.Policy, err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-	stmt, err := db.Prepare(sqlQueryFilePolicyById)
+	stmt, err := w.db.Prepare(sqlQueryFilePolicyById)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -120,14 +93,7 @@ func (w *Worker) queryFilePolicyById(id int) (event file.Policy, err error) {
 }
 
 func (w *Worker) queryFilePolicyLimitOffset(limit, offset int) (policies []file.Policy, err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-
-	stmt, err := db.Prepare(sqlQueryFilePolicyLimitOffset)
+	stmt, err := w.db.Prepare(sqlQueryFilePolicyLimitOffset)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -156,13 +122,7 @@ func (w *Worker) queryFilePolicyLimitOffset(limit, offset int) (policies []file.
 }
 
 func (w *Worker) deleteFilePolicyById(id int) (err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-	stmt, err := db.Prepare(sqlDeleteFilePolicyById)
+	stmt, err := w.db.Prepare(sqlDeleteFilePolicyById)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -178,13 +138,7 @@ func (w *Worker) deleteFilePolicyById(id int) (err error) {
 }
 
 func (w *Worker) deleteFileEventById(id int) (err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-	stmt, err := db.Prepare(sqlDeleteFileEventById)
+	stmt, err := w.db.Prepare(sqlDeleteFileEventById)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -200,13 +154,7 @@ func (w *Worker) deleteFileEventById(id int) (err error) {
 }
 
 func (w *Worker) updateFileEventStatusById(status, id int) (err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-	stmt, err := db.Prepare(sqlUpdateFileEventStatusById)
+	stmt, err := w.db.Prepare(sqlUpdateFileEventStatusById)
 	if err != nil {
 		logrus.Error(err)
 		return

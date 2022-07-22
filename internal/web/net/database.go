@@ -2,7 +2,6 @@
 package net
 
 import (
-	"database/sql"
 	"uranus/pkg/net"
 
 	"github.com/sirupsen/logrus"
@@ -15,13 +14,7 @@ const (
 )
 
 func (w *Worker) insertNetPolicy(policy *net.Policy) (id int64, err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-	stmt, err := db.Prepare(sqlInsertNetPolicy)
+	stmt, err := w.db.Prepare(sqlInsertNetPolicy)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -48,13 +41,7 @@ func (w *Worker) insertNetPolicy(policy *net.Policy) (id int64, err error) {
 }
 
 func (w *Worker) deleteNetPolicyById(id int) (err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-	stmt, err := db.Prepare(sqlDeleteNetPolicyById)
+	stmt, err := w.db.Prepare(sqlDeleteNetPolicyById)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -70,14 +57,7 @@ func (w *Worker) deleteNetPolicyById(id int) (err error) {
 }
 
 func (w *Worker) queryNetPolicyLimitOffset(limit, offset int) (policies []net.Policy, err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-
-	stmt, err := db.Prepare(sqlQueryNetPolicyLimitOffset)
+	stmt, err := w.db.Prepare(sqlQueryNetPolicyLimitOffset)
 	if err != nil {
 		logrus.Error(err)
 		return

@@ -3,6 +3,7 @@ package web
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
 	"sync"
 	"syscall"
@@ -19,16 +20,16 @@ import (
 )
 
 type WebWorker struct {
-	addr           string
-	server         *http.Server
-	wg             sync.WaitGroup
-	dataSourceName string
+	addr   string
+	server *http.Server
+	wg     sync.WaitGroup
+	db     *sql.DB
 }
 
-func NewWorker(addr string, dataSourceName string) *WebWorker {
+func NewWorker(addr string, db *sql.DB) *WebWorker {
 	w := WebWorker{
-		addr:           addr,
-		dataSourceName: dataSourceName,
+		addr: addr,
+		db:   db,
 	}
 	return &w
 }
@@ -47,23 +48,23 @@ func (w *WebWorker) Start() (err error) {
 	engine := gin.New()
 	engine.GET("/*filename", front)
 
-	if err = user.Init(engine, w.dataSourceName); err != nil {
+	if err = user.Init(engine, w.db); err != nil {
 		return
 	}
 
-	if err = process.Init(engine, w.dataSourceName); err != nil {
+	if err = process.Init(engine, w.db); err != nil {
 		return
 	}
 
-	if err = file.Init(engine, w.dataSourceName); err != nil {
+	if err = file.Init(engine, w.db); err != nil {
 		return
 	}
 
-	if err = net.Init(engine, w.dataSourceName); err != nil {
+	if err = net.Init(engine, w.db); err != nil {
 		return
 	}
 
-	control.Init(engine, w.dataSourceName)
+	control.Init(engine, w.db)
 
 	w.server = &http.Server{
 		Addr:    w.addr,
