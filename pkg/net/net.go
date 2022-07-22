@@ -14,8 +14,9 @@ const (
 )
 
 var (
-	EnableError      = errors.New("net protection enable failed")
-	ClearPolicyError = errors.New("clear net policy failed")
+	ErrorEnable      = errors.New("net protection enable failed")
+	ErrorDisable     = errors.New("net protection disable failed")
+	ErrorClearPolicy = errors.New("clear net policy failed")
 )
 
 type Policy struct {

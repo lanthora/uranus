@@ -63,15 +63,30 @@ func (w *ProcessWorker) Init() (err error) {
 	status, err := w.config.GetInteger(config.ProcessModuleStatus)
 	if err != nil {
 		err = nil
-		return
+		status = process.StatusDisable
 	}
 
-	if status != process.StatusEnable {
-		return
+	switch status {
+	case process.StatusEnable:
+		if ok := process.Enable(); !ok {
+			err = process.ErrorEnable
+			return
+		}
+	default:
+		if ok := process.Disable(); !ok {
+			err = process.ErrorEnable
+			return
+		}
 	}
 
-	if ok := process.Enable(); !ok {
-		err = process.ErrorEnable
+	judge, err := w.config.GetInteger(config.ProcessProtectionMode)
+	if err != nil {
+		err = nil
+		judge = process.StatusJudgeDisable
+	}
+
+	if ok := process.UpdateJudge(judge); !ok {
+		err = process.ErrorUpdateJudge
 		return
 	}
 
@@ -91,16 +106,6 @@ func (w *ProcessWorker) Start() (err error) {
 	}
 	err = w.conn.Send(`{"type":"user::msg::sub","section":"osinfo::report"}`)
 	if err != nil {
-		return
-	}
-
-	judge, err := w.config.GetInteger(config.ProcessProtectionMode)
-	if err != nil {
-		judge = process.StatusJudgeDisable
-	}
-
-	if ok := process.UpdateJudge(judge); !ok {
-		err = process.ErrorUpdateJudge
 		return
 	}
 

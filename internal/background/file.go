@@ -64,17 +64,22 @@ func (w *FileWorker) Init() (err error) {
 	status, err := w.config.GetInteger(config.FileModuleStatus)
 	if err != nil {
 		err = nil
-		return
+		status = file.StatusDisable
 	}
 
-	if status != file.StatusEnable {
-		return
-	}
-
-	if ok := file.Enable(); !ok {
-		err = file.EnableError
-		logrus.Error(err)
-		return
+	switch status {
+	case file.StatusEnable:
+		if ok := file.Enable(); !ok {
+			err = file.ErrorEnable
+			logrus.Error(err)
+			return
+		}
+	default:
+		if ok := file.Disable(); !ok {
+			err = file.ErrorDisable
+			logrus.Error(err)
+			return
+		}
 	}
 
 	return

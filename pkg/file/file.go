@@ -34,7 +34,8 @@ const (
 )
 
 var (
-	EnableError = errors.New("file protection enable failed")
+	ErrorEnable  = errors.New("file protection enable failed")
+	ErrorDisable = errors.New("file protection disable failed")
 )
 
 type Policy struct {

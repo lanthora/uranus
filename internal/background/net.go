@@ -58,15 +58,22 @@ func (w *NetWorker) Init() (err error) {
 	status, err := w.config.GetInteger(config.NetModuleStatus)
 	if err != nil {
 		err = nil
-		return
+		status = net.StatusDisable
 	}
 
-	if status != net.StatusEnable {
-		return
-	}
-
-	if ok := net.Enable(); !ok {
-		logrus.Error(net.EnableError)
+	switch status {
+	case net.StatusEnable:
+		if ok := net.Enable(); !ok {
+			err = net.ErrorEnable
+			logrus.Error(err)
+			return
+		}
+	default:
+		if ok := net.Disable(); !ok {
+			err = net.ErrorDisable
+			logrus.Error(err)
+			return
+		}
 	}
 
 	return
@@ -97,7 +104,7 @@ func (w *NetWorker) Stop() (err error) {
 	}
 
 	if ok := net.ClearPolicy(); !ok {
-		logrus.Error(net.ClearPolicyError)
+		logrus.Error(net.ErrorClearPolicy)
 	}
 
 	time.Sleep(time.Second)
