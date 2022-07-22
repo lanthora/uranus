@@ -4,8 +4,6 @@ package background
 import (
 	"database/sql"
 	"encoding/json"
-	"os"
-	"path/filepath"
 	"sync"
 	"time"
 	"uranus/internal/config"
@@ -22,7 +20,7 @@ const (
 )
 
 type NetWorker struct {
-	dataSourceName string
+	db *sql.DB
 
 	running bool
 	wg      sync.WaitGroup
@@ -31,9 +29,9 @@ type NetWorker struct {
 	dog     *watchdog.Watchdog
 }
 
-func NewNetWorker(dataSourceName string) *NetWorker {
+func NewNetWorker(db *sql.DB) *NetWorker {
 	worker := NetWorker{
-		dataSourceName: dataSourceName,
+		db: db,
 	}
 	return &worker
 }
@@ -44,7 +42,7 @@ func (w *NetWorker) Init() (err error) {
 		return
 	}
 
-	w.config, err = config.New(w.dataSourceName)
+	w.config, err = config.New(w.db)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -119,15 +117,7 @@ func (w *NetWorker) Stop() (err error) {
 }
 
 func (w *NetWorker) initDB() (err error) {
-	os.MkdirAll(filepath.Dir(w.dataSourceName), os.ModeDir)
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-
-	_, err = db.Exec(sqlCreateNetPolicyTable)
+	_, err = w.db.Exec(sqlCreateNetPolicyTable)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -137,14 +127,7 @@ func (w *NetWorker) initDB() (err error) {
 }
 
 func (w *NetWorker) initNetPolicy() (err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-
-	stmt, err := db.Prepare(sqlQueryNetPolicy)
+	stmt, err := w.db.Prepare(sqlQueryNetPolicy)
 	if err != nil {
 		logrus.Error(err)
 		return

@@ -2,6 +2,7 @@
 package file
 
 import (
+	"database/sql"
 	"uranus/internal/config"
 	"uranus/internal/web/render"
 	"uranus/pkg/file"
@@ -11,21 +12,21 @@ import (
 )
 
 type Worker struct {
-	engine         *gin.Engine
-	dataSourceName string
+	engine *gin.Engine
+	db     *sql.DB
 
 	config *config.Config
 }
 
-func Init(engine *gin.Engine, dataSourceName string) (err error) {
-	config, err := config.New(dataSourceName)
+func Init(engine *gin.Engine, db *sql.DB) (err error) {
+	config, err := config.New(db)
 	if err != nil {
 		return
 	}
 	w := &Worker{
-		engine:         engine,
-		dataSourceName: dataSourceName,
-		config:         config,
+		engine: engine,
+		db:     db,
+		config: config,
 	}
 	w.engine.POST("/file/core/status", w.fileCoreStatus)
 	w.engine.POST("/file/core/enable", w.fileCoreEnable)

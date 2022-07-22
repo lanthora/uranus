@@ -2,13 +2,16 @@
 package main
 
 import (
+	"database/sql"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"uranus/internal/background"
 	"uranus/internal/web"
 	"uranus/pkg/logger"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -29,10 +32,16 @@ func main() {
 
 	listen := config.GetString("listen")
 	dataSourceName := config.GetString("dsn")
+	os.MkdirAll(filepath.Dir(dataSourceName), os.ModeDir)
+	db, err := sql.Open("sqlite3", dataSourceName)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	defer db.Close()
 
-	processWorker := background.NewProcessWorker(dataSourceName)
-	fileWorker := background.NewFileWorker(dataSourceName)
-	netWorker := background.NewNetWorker(dataSourceName)
+	processWorker := background.NewProcessWorker(db)
+	fileWorker := background.NewFileWorker(db)
+	netWorker := background.NewNetWorker(db)
 
 	if err := processWorker.Init(); err != nil {
 		logrus.Fatal(err)
@@ -58,7 +67,7 @@ func main() {
 		logrus.Fatal(err)
 	}
 
-	webWorker := web.NewWorker(listen, dataSourceName)
+	webWorker := web.NewWorker(listen, db)
 	if err := webWorker.Start(); err != nil {
 		logrus.Fatal(err)
 	}

@@ -4,8 +4,6 @@ package background
 import (
 	"database/sql"
 	"encoding/json"
-	"os"
-	"path/filepath"
 	"sync"
 	"time"
 	"uranus/internal/config"
@@ -13,7 +11,6 @@ import (
 	"uranus/pkg/file"
 	"uranus/pkg/watchdog"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
 )
 
@@ -28,7 +25,7 @@ const (
 )
 
 type FileWorker struct {
-	dataSourceName string
+	db *sql.DB
 
 	running bool
 	wg      sync.WaitGroup
@@ -37,9 +34,9 @@ type FileWorker struct {
 	dog     *watchdog.Watchdog
 }
 
-func NewFileWorker(dataSourceName string) *FileWorker {
+func NewFileWorker(db *sql.DB) *FileWorker {
 	worker := FileWorker{
-		dataSourceName: dataSourceName,
+		db: db,
 	}
 	return &worker
 }
@@ -51,7 +48,7 @@ func (w *FileWorker) Init() (err error) {
 		return
 	}
 
-	w.config, err = config.New(w.dataSourceName)
+	w.config, err = config.New(w.db)
 	if err != nil {
 		return
 	}
@@ -186,21 +183,13 @@ func (w *FileWorker) run() {
 }
 
 func (w *FileWorker) initDB() (err error) {
-	os.MkdirAll(filepath.Dir(w.dataSourceName), os.ModeDir)
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-
-	_, err = db.Exec(sqlCreateFilePolicyTable)
+	_, err = w.db.Exec(sqlCreateFilePolicyTable)
 	if err != nil {
 		logrus.Error(err)
 		return
 	}
 
-	_, err = db.Exec(sqlCreateFileEventTable)
+	_, err = w.db.Exec(sqlCreateFileEventTable)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -210,14 +199,7 @@ func (w *FileWorker) initDB() (err error) {
 }
 
 func (w *FileWorker) setPolicyThenGetExceptionPolicies() (policies []file.Policy, err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-
-	stmt, err := db.Prepare(sqlQueryFilePolicy)
+	stmt, err := w.db.Prepare(sqlQueryFilePolicy)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -283,13 +265,7 @@ func (w *FileWorker) initFilePolicy() (err error) {
 }
 
 func (w *FileWorker) updateFilePolcyFsidInoById(fsid, ino, id uint64) (err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-	stmt, err := db.Prepare(sqlUpdateFilePolicyFsidInoById)
+	stmt, err := w.db.Prepare(sqlUpdateFilePolicyFsidInoById)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -312,14 +288,7 @@ func (w *FileWorker) updateFilePolcyFsidInoById(fsid, ino, id uint64) (err error
 }
 
 func (w *FileWorker) updateFilePolcyStatusById(status int, id uint64) (err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-
-	stmt, err := db.Prepare(sqlUpdateFilePolicyStatusById)
+	stmt, err := w.db.Prepare(sqlUpdateFilePolicyStatusById)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -342,13 +311,7 @@ func (w *FileWorker) updateFilePolcyStatusById(status int, id uint64) (err error
 }
 
 func (w *FileWorker) handleFileEvent(path string, fsid, ino uint64, perm int) (err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-	stmt, err := db.Prepare(sqlQueryFilePolicyIdByFsidIno)
+	stmt, err := w.db.Prepare(sqlQueryFilePolicyIdByFsidIno)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -362,7 +325,7 @@ func (w *FileWorker) handleFileEvent(path string, fsid, ino uint64, perm int) (e
 		return
 	}
 
-	stmt, err = db.Prepare(sqlInsertFileEvent)
+	stmt, err = w.db.Prepare(sqlInsertFileEvent)
 	if err != nil {
 		logrus.Error(err)
 		return

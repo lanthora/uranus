@@ -4,8 +4,6 @@ package background
 import (
 	"database/sql"
 	"encoding/json"
-	"os"
-	"path/filepath"
 	"sync"
 	"syscall"
 	"time"
@@ -14,7 +12,6 @@ import (
 	"uranus/pkg/process"
 	"uranus/pkg/watchdog"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
 )
 
@@ -27,7 +24,7 @@ const (
 )
 
 type ProcessWorker struct {
-	dataSourceName string
+	db *sql.DB
 
 	running bool
 	wg      sync.WaitGroup
@@ -36,9 +33,9 @@ type ProcessWorker struct {
 	dog     *watchdog.Watchdog
 }
 
-func NewProcessWorker(dataSourceName string) *ProcessWorker {
+func NewProcessWorker(db *sql.DB) *ProcessWorker {
 	worker := ProcessWorker{
-		dataSourceName: dataSourceName,
+		db: db,
 	}
 	return &worker
 }
@@ -49,7 +46,7 @@ func (w *ProcessWorker) Init() (err error) {
 		return
 	}
 
-	w.config, err = config.New(w.dataSourceName)
+	w.config, err = config.New(w.db)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -146,21 +143,13 @@ func (w *ProcessWorker) Stop() (err error) {
 }
 
 func (w *ProcessWorker) initDB() (err error) {
-	os.MkdirAll(filepath.Dir(w.dataSourceName), os.ModeDir)
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-
-	_, err = db.Exec(sqlCreateProcessTable)
+	_, err = w.db.Exec(sqlCreateProcessTable)
 	if err != nil {
 		logrus.Error(err)
 		return
 	}
 
-	_, err = db.Exec(sqlCreateProcessCmdIndex)
+	_, err = w.db.Exec(sqlCreateProcessCmdIndex)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -170,14 +159,7 @@ func (w *ProcessWorker) initDB() (err error) {
 }
 
 func (w *ProcessWorker) initTrustedCmd() (err error) {
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
-
-	stmt, err := db.Prepare(sqlQueryAllowedProcesses)
+	stmt, err := w.db.Prepare(sqlQueryAllowedProcesses)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -213,14 +195,8 @@ func (w *ProcessWorker) updateCmd(cmd string, judge int) (err error) {
 	if status == process.StatusTrusted && judge != process.StatusJudgeDefense {
 		process.SetTrustedCmd(cmd)
 	}
-	db, err := sql.Open("sqlite3", w.dataSourceName)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	defer db.Close()
 
-	stmt, err := db.Prepare(sqlUpdateProcessCount)
+	stmt, err := w.db.Prepare(sqlUpdateProcessCount)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -241,7 +217,7 @@ func (w *ProcessWorker) updateCmd(cmd string, judge int) (err error) {
 		return
 	}
 
-	stmt, err = db.Prepare(sqlInsertProcessEvent)
+	stmt, err = w.db.Prepare(sqlInsertProcessEvent)
 	if err != nil {
 		logrus.Error(err)
 		return

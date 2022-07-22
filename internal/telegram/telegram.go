@@ -2,6 +2,7 @@
 package telegram
 
 import (
+	"database/sql"
 	"encoding/json"
 	"sync"
 	"syscall"
@@ -27,8 +28,8 @@ func NewWorker(token string, ownerID int64) *TelegramWorker {
 	return &w
 }
 
-func SetStandaloneMode(dataSourceName string) (err error) {
-	cfg, err := config.New(dataSourceName)
+func SetStandaloneMode(db *sql.DB) (err error) {
+	cfg, err := config.New(db)
 	if err != nil {
 		logrus.Error(err)
 		return
