@@ -42,6 +42,7 @@ func main() {
 	processWorker := background.NewProcessWorker(db)
 	fileWorker := background.NewFileWorker(db)
 	netWorker := background.NewNetWorker(db)
+	webWorker := web.NewWorker(listen, db)
 
 	if err := processWorker.Init(); err != nil {
 		logrus.Fatal(err)
@@ -52,6 +53,10 @@ func main() {
 	}
 
 	if err := netWorker.Init(); err != nil {
+		logrus.Fatal(err)
+	}
+
+	if err := webWorker.Init(); err != nil {
 		logrus.Fatal(err)
 	}
 
@@ -67,7 +72,6 @@ func main() {
 		logrus.Fatal(err)
 	}
 
-	webWorker := web.NewWorker(listen, db)
 	if err := webWorker.Start(); err != nil {
 		logrus.Fatal(err)
 	}

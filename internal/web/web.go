@@ -42,7 +42,7 @@ func (w *WebWorker) serve() {
 	}
 }
 
-func (w *WebWorker) Start() (err error) {
+func (w *WebWorker) Init() (err error) {
 	gin.SetMode(gin.ReleaseMode)
 
 	engine := gin.New()
@@ -70,6 +70,10 @@ func (w *WebWorker) Start() (err error) {
 		Addr:    w.addr,
 		Handler: engine,
 	}
+	return
+}
+
+func (w *WebWorker) Start() (err error) {
 	w.wg.Add(1)
 	go w.serve()
 	return
