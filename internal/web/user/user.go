@@ -43,7 +43,7 @@ func Init(engine *gin.Engine, db *sql.DB) (err error) {
 	w.engine.POST("/user/add", w.userAdd)
 	w.engine.POST("/user/delete", w.userDelete)
 	w.engine.POST("/user/update", w.userUpdate)
-	w.engine.POST("/user/query", w.userQuery)
+	w.engine.POST("/user/list", w.userList)
 
 	if err = w.initUserTable(); err != nil {
 		return
@@ -189,7 +189,7 @@ func (w *Worker) userAdd(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) userQuery(context *gin.Context) {
+func (w *Worker) userList(context *gin.Context) {
 	users, err := w.queryAllUser()
 	if err != nil {
 		render.Status(context, render.StatusUserQueryUserFailed)
