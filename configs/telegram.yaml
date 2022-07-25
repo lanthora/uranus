@@ -5,6 +5,6 @@ token: ""
 # chat ID
 id: 0
 
-# SQLite Data Source Name ,https://github.com/mattn/go-sqlite3#connection-string
-dsn: "/var/lib/hackernel/telegram.db?cache=shared&mode=rwc&_journal_mode=WAL"
+# 数据库文件路径
+db: "/var/lib/hackernel/telegram.db"
 

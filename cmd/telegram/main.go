@@ -32,7 +32,9 @@ func main() {
 
 	token := config.GetString("token")
 	ownerID := config.GetInt64("id")
-	dataSourceName := config.GetString("dsn")
+	dbFile := config.GetString("db")
+	dbOptions := "?cache=shared&mode=rwc&_journal_mode=WAL"
+	dataSourceName := dbFile + dbOptions
 
 	os.MkdirAll(filepath.Dir(dataSourceName), os.ModeDir)
 	db, err := sql.Open("sqlite3", dataSourceName)
