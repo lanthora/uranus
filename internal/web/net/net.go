@@ -111,15 +111,20 @@ func (w *Worker) netPolicyDelete(context *gin.Context) {
 		return
 	}
 
-	ok := net.DeletePolicy(request.ID)
-	if !ok {
-		render.Status(context, render.StatusNetDeletePolicyFailed)
+	err := w.deleteNetPolicyById(request.ID)
+	if err == net.ErrorPolicyNotExist {
+		render.Status(context, render.StatusNetPolicyNotExist)
 		return
 	}
 
-	err := w.deleteNetPolicyById(request.ID)
 	if err != nil {
 		render.Status(context, render.StatusNetDeletePolicyDatabaseFailed)
+		return
+	}
+
+	ok := net.DeletePolicy(request.ID)
+	if !ok {
+		render.Status(context, render.StatusNetDeletePolicyFailed)
 		return
 	}
 

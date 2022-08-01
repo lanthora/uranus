@@ -58,6 +58,7 @@ const (
 	StatusNetDeletePolicyFailed
 	StatusNetDeletePolicyDatabaseFailed
 	StatusNetQueryPolicyListFailed
+	StatusNetPolicyNotExist
 )
 
 var messages = map[int]string{
@@ -99,6 +100,7 @@ var messages = map[int]string{
 	StatusNetDeletePolicyFailed:         "删除网络策略失败",
 	StatusNetDeletePolicyDatabaseFailed: "删除网络策略数据库失败",
 	StatusNetQueryPolicyListFailed:      "查询网络策略列表失败",
+	StatusNetPolicyNotExist:             "网络策略不存在",
 }
 
 func Success(context *gin.Context, data interface{}) {

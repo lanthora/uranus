@@ -48,8 +48,18 @@ func (w *Worker) deleteNetPolicyById(id int) (err error) {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(id)
+	result, err := stmt.Exec(id)
 	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	if affected == 0 {
+		err = net.ErrorPolicyNotExist
 		logrus.Error(err)
 		return
 	}
