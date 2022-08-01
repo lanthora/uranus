@@ -210,8 +210,7 @@ func (w *Worker) processTrustUpdate(context *gin.Context) {
 func (w *Worker) processTrustStatus(context *gin.Context) {
 	status, err := w.config.GetInteger(config.ProcessCmdDefaultStatus)
 	if err != nil {
-		render.Status(context, render.StatusProcessGetTrustStatusFailed)
-		return
+		status = process.StatusPending
 	}
 	response := struct {
 		Status int `json:"status" binding:"number"`
