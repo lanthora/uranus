@@ -248,7 +248,7 @@ func (w *Worker) fileEventList(context *gin.Context) {
 
 	events, err := w.queryFileEventOffsetLimit(request.Limit, request.Offset)
 	if err != nil {
-		render.Status(context, render.StatusProcessQueryEventFailed)
+		render.Status(context, render.StatusFileQueryEventFailed)
 		return
 	}
 	render.Success(context, events)

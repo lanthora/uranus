@@ -34,6 +34,9 @@ func Init(engine *gin.Engine, db *sql.DB) (err error) {
 	w.engine.POST("/net/policy/add", w.netPolicyAdd)
 	w.engine.POST("/net/policy/delete", w.netPolicyDelete)
 	w.engine.POST("/net/policy/list", w.netPolicyList)
+	w.engine.POST("/net/event/list", w.netEventList)
+	w.engine.POST("/net/event/delete", w.netEventDelete)
+	w.engine.POST("/net/event/update", w.netEventUpdate)
 	return
 }
 
@@ -149,4 +152,60 @@ func (w *Worker) netPolicyList(context *gin.Context) {
 		return
 	}
 	render.Success(context, policies)
+}
+
+func (w *Worker) netEventList(context *gin.Context) {
+	request := struct {
+		Limit  int `json:"limit" binding:"number"`
+		Offset int `json:"offset" binding:"number"`
+	}{}
+
+	if err := context.ShouldBindJSON(&request); err != nil {
+		render.Status(context, render.StatusInvalidArgument)
+		return
+	}
+
+	events, err := w.queryNetEventOffsetLimit(request.Limit, request.Offset)
+	if err != nil {
+		render.Status(context, render.StatusNetQueryEventFailed)
+		return
+	}
+	render.Success(context, events)
+}
+
+func (w *Worker) netEventDelete(context *gin.Context) {
+	request := struct {
+		ID int `json:"id" binding:"number"`
+	}{}
+
+	if err := context.ShouldBindJSON(&request); err != nil {
+		render.Status(context, render.StatusInvalidArgument)
+		return
+	}
+
+	err := w.deleteNetEventById(request.ID)
+	if err != nil {
+		render.Status(context, render.StatusNetDeleteEventFailed)
+		return
+	}
+	render.Status(context, render.StatusSuccess)
+}
+
+func (w *Worker) netEventUpdate(context *gin.Context) {
+	request := struct {
+		Status int `json:"status" binding:"number"`
+		ID     int `json:"id" binding:"number"`
+	}{}
+
+	if err := context.ShouldBindJSON(&request); err != nil {
+		render.Status(context, render.StatusInvalidArgument)
+		return
+	}
+
+	err := w.updateNetEventStatusById(request.Status, request.ID)
+	if err != nil {
+		render.Status(context, render.StatusNetUpdateEventStatusFailed)
+		return
+	}
+	render.Status(context, render.StatusSuccess)
 }

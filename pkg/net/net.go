@@ -13,6 +13,11 @@ const (
 	StatusEnable  = 1
 )
 
+const (
+	StatusEventUnread = 0
+	StatusEventRead   = 1
+)
+
 var (
 	ErrorEnable         = errors.New("net protection enable failed")
 	ErrorDisable        = errors.New("net protection disable failed")
@@ -49,6 +54,18 @@ type Policy struct {
 	} `json:"port"`
 	Flags    int32  `json:"flags"`
 	Response uint32 `json:"response"`
+}
+
+type Event struct {
+	ID        uint64 `json:"id"`
+	Protocol  int    `json:"protocol"`
+	SrcAddr   string `json:"saddr"`
+	DstAddr   string `json:"daddr"`
+	SrcPort   int    `json:"sport"`
+	DstPort   int    `json:"dport"`
+	Timestamp int64  `json:"timestamp"`
+	Policy    uint64 `json:"policy"`
+	Status    int    `json:"status"`
 }
 
 func AddPolicy(policy Policy) bool {

@@ -145,6 +145,7 @@ func (w *Worker) deleteFileEventById(id int) (err error) {
 	}
 	defer stmt.Close()
 
+	// TODO: 数据不存在时错误提示
 	_, err = stmt.Exec(id)
 	if err != nil {
 		logrus.Error(err)
@@ -161,6 +162,7 @@ func (w *Worker) updateFileEventStatusById(status, id int) (err error) {
 	}
 	defer stmt.Close()
 
+	// TODO: 数据不存在时错误提示
 	_, err = stmt.Exec(status, id)
 	if err != nil {
 		logrus.Error(err)

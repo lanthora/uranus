@@ -165,6 +165,7 @@ func (w *FileWorker) run() {
 	w.dog = watchdog.New(10*time.Second, func() {
 		logrus.Error("osinfo::report timeout")
 	})
+	defer w.dog.Stop()
 	for w.running {
 		msg, err := w.conn.Recv()
 

@@ -48,6 +48,7 @@ const (
 	StatusFileUpdatePolicyFileNotExist
 	StatusFileUpdatePolicyFailed
 	StatusFileUpdateEventStatusFailed
+	StatusFileQueryEventFailed
 )
 
 const (
@@ -59,6 +60,9 @@ const (
 	StatusNetDeletePolicyDatabaseFailed
 	StatusNetQueryPolicyListFailed
 	StatusNetPolicyNotExist
+	StatusNetQueryEventFailed
+	StatusNetDeleteEventFailed
+	StatusNetUpdateEventStatusFailed
 )
 
 var messages = map[int]string{
@@ -93,6 +97,7 @@ var messages = map[int]string{
 	StatusFileUpdatePolicyFileNotExist:  "更新文件策略文件不存在",
 	StatusFileUpdatePolicyFailed:        "更新文件策略失败",
 	StatusFileUpdateEventStatusFailed:   "更新文件事件状态失败",
+	StatusFileQueryEventFailed:          "查询文件事件失败",
 	StatusNetEnableFailed:               "启动网络防护模块失败",
 	StatusNetDisableFailed:              "关闭网络防护模块失败",
 	StatusNetAddPolicyFailed:            "添加网络策略失败",
@@ -101,6 +106,9 @@ var messages = map[int]string{
 	StatusNetDeletePolicyDatabaseFailed: "删除网络策略数据库失败",
 	StatusNetQueryPolicyListFailed:      "查询网络策略列表失败",
 	StatusNetPolicyNotExist:             "网络策略不存在",
+	StatusNetQueryEventFailed:           "查询网络事件失败",
+	StatusNetDeleteEventFailed:          "网络事件删除失败",
+	StatusNetUpdateEventStatusFailed:    "更新网络事件状态失败",
 }
 
 func Success(context *gin.Context, data interface{}) {
