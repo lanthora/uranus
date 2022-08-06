@@ -15,8 +15,10 @@ import (
 )
 
 const (
-	sqlCreateNetPolicyTable = `create table if not exists net_policy(id integer primary key autoincrement, priority int8, addr_src_begin text, addr_src_end text, addr_dst_begin text, addr_dst_end text, protocol_begin int, protocol_end int, port_src_begin int, port_src_end int, port_dst_begin int, port_dst_end int, flags int, response int)`
+	sqlCreateNetPolicyTable = `create table if not exists net_policy(id integer primary key autoincrement, priority integer, addr_src_begin text, addr_src_end text, addr_dst_begin text, addr_dst_end text, protocol_begin integer, protocol_end integer, port_src_begin integer, port_src_end integer, port_dst_begin integer, port_dst_end integer, flags integer, response integer)`
+	sqlCreateNetEventTable  = `create table if not exists net_event(id integer primary key autoincrement, protocol integer, saddr text, daddr text, sport integer, dport integer, timestamp integer not null, policy integer, status integer not null)`
 	sqlQueryNetPolicy       = `select id,priority,addr_src_begin,addr_src_end,addr_dst_begin,addr_dst_end,protocol_begin,protocol_end,port_src_begin,port_src_end,port_dst_begin,port_dst_end,flags,response from net_policy`
+	sqlInsertNetEvent       = `insert into net_event(protocol,saddr,daddr,sport,dport,timestamp,policy,status) values(?,?,?,?,?,?,?,?)`
 )
 
 type NetWorker struct {
@@ -90,6 +92,12 @@ func (w *NetWorker) Start() (err error) {
 		return
 	}
 
+	err = w.conn.Send(`{"type":"user::msg::sub","section":"kernel::net::report"}`)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
 	w.wg.Add(1)
 	go w.run()
 	return
@@ -98,6 +106,12 @@ func (w *NetWorker) Start() (err error) {
 func (w *NetWorker) Stop() (err error) {
 	err = w.conn.Send(`{"type":"user::msg::unsub","section":"osinfo::report"}`)
 	if err != nil {
+		return
+	}
+
+	err = w.conn.Send(`{"type":"user::msg::unsub","section":"kernel::net::report"}`)
+	if err != nil {
+		logrus.Error(err)
 		return
 	}
 
@@ -118,6 +132,12 @@ func (w *NetWorker) Stop() (err error) {
 
 func (w *NetWorker) initDB() (err error) {
 	_, err = w.db.Exec(sqlCreateNetPolicyTable)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	_, err = w.db.Exec(sqlCreateNetEventTable)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -165,9 +185,31 @@ func (w *NetWorker) initNetPolicy() (err error) {
 	return
 }
 
+func (w *NetWorker) handleNetEvent(protocol int, saddr, daddr string, sport, dport int, policy int) (err error) {
+	stmt, err := w.db.Prepare(sqlInsertNetEvent)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(protocol, saddr, daddr, sport, dport, time.Now().Unix(), policy, net.StatusEventUnread)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	return
+}
+
 func (w *NetWorker) handleMsg(msg string) {
 	event := struct {
-		Type string `json:"type"`
+		Type     string `json:"type"`
+		Protocol int    `json:"protocol"`
+		SrcAddr  string `json:"saddr"`
+		DstAddr  string `json:"daddr"`
+		SrcPort  int    `json:"sport"`
+		DstPort  int    `json:"dport"`
+		Policy   int    `json:"policy"`
 	}{}
 
 	err := json.Unmarshal([]byte(msg), &event)
@@ -176,6 +218,14 @@ func (w *NetWorker) handleMsg(msg string) {
 		return
 	}
 	switch event.Type {
+	case "kernel::net::report":
+		err = w.handleNetEvent(event.Protocol,
+			event.SrcAddr, event.DstAddr,
+			event.SrcPort, event.DstPort,
+			event.Policy)
+		if err != nil {
+			logrus.Error(err)
+		}
 	default:
 	}
 }
@@ -185,6 +235,7 @@ func (w *NetWorker) run() {
 	w.dog = watchdog.New(10*time.Second, func() {
 		logrus.Error("osinfo::report timeout")
 	})
+	defer w.dog.Stop()
 	for w.running {
 		msg, err := w.conn.Recv()
 
