@@ -104,16 +104,15 @@ func (w *NetWorker) Start() (err error) {
 	return
 }
 
-func (w *NetWorker) Stop() (err error) {
-	err = w.conn.Send(`{"type":"user::msg::unsub","section":"osinfo::report"}`)
+func (w *NetWorker) Stop() {
+	err := w.conn.Send(`{"type":"user::msg::unsub","section":"osinfo::report"}`)
 	if err != nil {
-		return
+		logrus.Error(err)
 	}
 
 	err = w.conn.Send(`{"type":"user::msg::unsub","section":"kernel::net::report"}`)
 	if err != nil {
 		logrus.Error(err)
-		return
 	}
 
 	if ok := net.ClearPolicy(); !ok {
@@ -124,11 +123,10 @@ func (w *NetWorker) Stop() (err error) {
 	w.running = false
 	err = w.conn.Shutdown(time.Now())
 	if err != nil {
-		return
+		logrus.Error(err)
 	}
 	w.wg.Wait()
 	w.conn.Close()
-	return
 }
 
 func (w *NetWorker) initDB() (err error) {
