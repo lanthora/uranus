@@ -141,8 +141,8 @@ func (w *FileWorker) handleMsg(msg string) {
 	event := struct {
 		Type string `json:"type"`
 		Path string `json:"name"`
-		Fsid uint64 `json:"fsid"`
-		Ino  uint64 `json:"ino"`
+		Fsid int64  `json:"fsid"`
+		Ino  int64  `json:"ino"`
 		Perm int    `json:"perm"`
 	}{}
 
@@ -216,8 +216,8 @@ func (w *FileWorker) setPolicyThenGetExceptionPolicies() (policies []file.Policy
 	defer rows.Close()
 	for rows.Next() {
 		policy := file.Policy{}
-		fsid := uint64(0)
-		ino := uint64(0)
+		fsid := int64(0)
+		ino := int64(0)
 		status := int(0)
 
 		err = rows.Scan(&policy.ID, &policy.Path, &policy.Fsid, &policy.Ino, &policy.Perm)
@@ -267,7 +267,7 @@ func (w *FileWorker) initFilePolicy() (err error) {
 	return
 }
 
-func (w *FileWorker) updateFilePolcyFsidInoById(fsid, ino, id uint64) (err error) {
+func (w *FileWorker) updateFilePolcyFsidInoById(fsid, ino, id int64) (err error) {
 	stmt, err := w.db.Prepare(sqlUpdateFilePolicyFsidInoById)
 	if err != nil {
 		logrus.Error(err)
@@ -290,7 +290,7 @@ func (w *FileWorker) updateFilePolcyFsidInoById(fsid, ino, id uint64) (err error
 	return
 }
 
-func (w *FileWorker) updateFilePolcyStatusById(status int, id uint64) (err error) {
+func (w *FileWorker) updateFilePolcyStatusById(status int, id int64) (err error) {
 	stmt, err := w.db.Prepare(sqlUpdateFilePolicyStatusById)
 	if err != nil {
 		logrus.Error(err)
@@ -313,7 +313,7 @@ func (w *FileWorker) updateFilePolcyStatusById(status int, id uint64) (err error
 	return
 }
 
-func (w *FileWorker) handleFileEvent(path string, fsid, ino uint64, perm int) (err error) {
+func (w *FileWorker) handleFileEvent(path string, fsid, ino int64, perm int) (err error) {
 	stmt, err := w.db.Prepare(sqlQueryFilePolicyIdByFsidIno)
 	if err != nil {
 		logrus.Error(err)

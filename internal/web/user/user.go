@@ -53,7 +53,7 @@ func Init(engine *gin.Engine, db *sql.DB) (err error) {
 }
 
 type User struct {
-	UserID      uint64 `json:"userID"`
+	UserID      int64  `json:"userID"`
 	Username    string `json:"username"`
 	AliasName   string `json:"aliasName"`
 	Permissions string `json:"permissions"`
@@ -200,7 +200,7 @@ func (w *Worker) userList(context *gin.Context) {
 
 func (w *Worker) userDelete(context *gin.Context) {
 	request := struct {
-		UserID uint64 `json:"userID" binding:"number"`
+		UserID int64 `json:"userID" binding:"number"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -216,7 +216,7 @@ func (w *Worker) userDelete(context *gin.Context) {
 
 func (w *Worker) userUpdate(context *gin.Context) {
 	request := struct {
-		UserID      uint64 `json:"userID" binding:"number"`
+		UserID      int64  `json:"userID" binding:"number"`
 		Username    string `json:"username" binding:"required"`
 		Password    string `json:"password" binding:"required"`
 		AliasName   string `json:"aliasName" binding:"required"`

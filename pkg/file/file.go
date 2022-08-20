@@ -39,27 +39,27 @@ var (
 )
 
 type Policy struct {
-	ID        uint64 `json:"id"`
+	ID        int64  `json:"id"`
 	Path      string `json:"path"`
-	Fsid      uint64 `json:"fsid"`
-	Ino       uint64 `json:"ino"`
+	Fsid      int64  `json:"fsid"`
+	Ino       int64  `json:"ino"`
 	Perm      int    `json:"perm"`
 	Timestamp int64  `json:"timestamp"`
 	Status    int    `json:"status"`
 }
 
 type Event struct {
-	ID        uint64 `json:"id"`
+	ID        int64  `json:"id"`
 	Path      string `json:"path"`
-	Fsid      uint64 `json:"fsid"`
-	Ino       uint64 `json:"ino"`
+	Fsid      int64  `json:"fsid"`
+	Ino       int64  `json:"ino"`
 	Perm      int    `json:"perm"`
 	Timestamp int64  `json:"timestamp"`
-	Policy    uint64 `json:"policy"`
+	Policy    int64  `json:"policy"`
 	Status    int    `json:"status"`
 }
 
-func SetPolicy(path string, perm, flag int) (fsid, ino uint64, status int, err error) {
+func SetPolicy(path string, perm, flag int) (fsid, ino int64, status int, err error) {
 	request := map[string]interface{}{
 		"type": "user::file::set",
 		"path": path,
@@ -87,8 +87,8 @@ func SetPolicy(path string, perm, flag int) (fsid, ino uint64, status int, err e
 		return
 	}
 
-	fsid = response.Fsid
-	ino = response.Ino
+	fsid = (int64)(response.Fsid)
+	ino = (int64)(response.Ino)
 
 	switch response.Code {
 	case 0:

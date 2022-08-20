@@ -57,14 +57,14 @@ type Policy struct {
 }
 
 type Event struct {
-	ID        uint64 `json:"id"`
+	ID        int64  `json:"id"`
 	Protocol  int    `json:"protocol"`
 	SrcAddr   string `json:"saddr"`
 	DstAddr   string `json:"daddr"`
 	SrcPort   int    `json:"sport"`
 	DstPort   int    `json:"dport"`
 	Timestamp int64  `json:"timestamp"`
-	Policy    uint64 `json:"policy"`
+	Policy    int64  `json:"policy"`
 	Status    int    `json:"status"`
 }
 

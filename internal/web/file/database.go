@@ -19,7 +19,7 @@ const (
 	sqlUpdateFileEventStatusById  = `update file_event set status=? where id=?`
 )
 
-func (w *Worker) insertFilePolicy(path string, fsid, ino uint64, perm, status int) (err error) {
+func (w *Worker) insertFilePolicy(path string, fsid, ino int64, perm, status int) (err error) {
 	stmt, err := w.db.Prepare(sqlInsertFilePolicy)
 	if err != nil {
 		logrus.Error(err)
@@ -35,7 +35,7 @@ func (w *Worker) insertFilePolicy(path string, fsid, ino uint64, perm, status in
 	return
 }
 
-func (w *Worker) updateFilePolicyById(fsid, ino uint64, perm, status, id int) (err error) {
+func (w *Worker) updateFilePolicyById(fsid, ino int64, perm, status, id int) (err error) {
 	stmt, err := w.db.Prepare(sqlUpdateFilePolicyById)
 	if err != nil {
 		logrus.Error(err)
