@@ -141,8 +141,8 @@ func (w *FileWorker) handleMsg(msg string) {
 	event := struct {
 		Type string `json:"type"`
 		Path string `json:"name"`
-		Fsid int64  `json:"fsid"`
-		Ino  int64  `json:"ino"`
+		Fsid uint64 `json:"fsid"`
+		Ino  uint64 `json:"ino"`
 		Perm int    `json:"perm"`
 	}{}
 
@@ -153,7 +153,7 @@ func (w *FileWorker) handleMsg(msg string) {
 	}
 	switch event.Type {
 	case "kernel::file::report":
-		err = w.handleFileEvent(event.Path, event.Fsid, event.Ino, event.Perm)
+		err = w.handleFileEvent(event.Path, int64(event.Fsid), int64(event.Ino), event.Perm)
 		if err != nil {
 			logrus.Error(err)
 		}
@@ -322,7 +322,7 @@ func (w *FileWorker) handleFileEvent(path string, fsid, ino int64, perm int) (er
 	defer stmt.Close()
 
 	policyId := int64(0)
-	err = stmt.QueryRow(int64(fsid), int64(ino)).Scan(&policyId)
+	err = stmt.QueryRow(fsid, ino).Scan(&policyId)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -335,7 +335,7 @@ func (w *FileWorker) handleFileEvent(path string, fsid, ino int64, perm int) (er
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(path, int(fsid), int(ino), perm, time.Now().Unix(), policyId, file.StatusEventUnread)
+	_, err = stmt.Exec(path, fsid, ino, perm, time.Now().Unix(), policyId, file.StatusEventUnread)
 	if err != nil {
 		logrus.Error(err)
 		return
