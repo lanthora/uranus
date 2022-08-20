@@ -106,35 +106,32 @@ func (w *FileWorker) Start() (err error) {
 	return
 }
 
-func (w *FileWorker) Stop() (err error) {
-	err = w.conn.Send(`{"type":"user::msg::unsub","section":"kernel::proc::report"}`)
+func (w *FileWorker) Stop() {
+	err := w.conn.Send(`{"type":"user::msg::unsub","section":"kernel::proc::report"}`)
 	if err != nil {
-		return
+		logrus.Error(err)
 	}
 	err = w.conn.Send(`{"type":"user::msg::unsub","section":"osinfo::report"}`)
 	if err != nil {
-		return
+		logrus.Error(err)
 	}
 
 	if ok := file.Disable(); !ok {
 		logrus.Error("file protection disable failed")
-		return
 	}
 
 	if ok := file.ClearPolicy(); !ok {
 		logrus.Error("file protection clear failed")
-		return
 	}
 
 	time.Sleep(time.Second)
 	w.running = false
 	err = w.conn.Shutdown(time.Now())
 	if err != nil {
-		return
+		logrus.Error(err)
 	}
 	w.wg.Wait()
 	w.conn.Close()
-	return
 }
 
 func (w *FileWorker) handleMsg(msg string) {

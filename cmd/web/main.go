@@ -83,19 +83,8 @@ func main() {
 	sig := <-sigchan
 	logrus.Info(sig)
 
-	if err := webWorker.Stop(); err != nil {
-		logrus.Error(err)
-	}
-
-	if err := processWorker.Stop(); err != nil {
-		logrus.Error(err)
-	}
-
-	if err := fileWorker.Stop(); err != nil {
-		logrus.Error(err)
-	}
-
-	if err := netWorker.Stop(); err != nil {
-		logrus.Error(err)
-	}
+	webWorker.Stop()
+	processWorker.Stop()
+	fileWorker.Stop()
+	netWorker.Stop()
 }

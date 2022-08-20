@@ -71,20 +71,19 @@ func (w *TelegramWorker) Start() (err error) {
 	return
 }
 
-func (w *TelegramWorker) Stop() (err error) {
-	err = w.conn.Send(`{"type":"user::msg::unsub","section":"audit::proc::report"}`)
+func (w *TelegramWorker) Stop() {
+	err := w.conn.Send(`{"type":"user::msg::unsub","section":"audit::proc::report"}`)
 	if err != nil {
-		return
+		logrus.Fatal(err)
 	}
 	time.Sleep(time.Second)
 	w.running = false
 	err = w.conn.Shutdown(time.Now())
 	if err != nil {
-		return
+		logrus.Fatal(err)
 	}
 	w.wg.Wait()
 	w.conn.Close()
-	return
 }
 
 func (w *TelegramWorker) runReportToOwner() {

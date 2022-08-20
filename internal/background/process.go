@@ -111,35 +111,32 @@ func (w *ProcessWorker) Start() (err error) {
 	return
 }
 
-func (w *ProcessWorker) Stop() (err error) {
-	err = w.conn.Send(`{"type":"user::msg::unsub","section":"audit::proc::report"}`)
+func (w *ProcessWorker) Stop() {
+	err := w.conn.Send(`{"type":"user::msg::unsub","section":"audit::proc::report"}`)
 	if err != nil {
-		return
+		logrus.Error(err)
 	}
 	err = w.conn.Send(`{"type":"user::msg::unsub","section":"osinfo::report"}`)
 	if err != nil {
-		return
+		logrus.Error(err)
 	}
 
 	if ok := process.Disable(); !ok {
 		logrus.Error("process protection disable failed")
-		return
 	}
 
 	if ok := process.ClearPolicy(); !ok {
 		logrus.Error("process protection clear failed")
-		return
 	}
 
 	time.Sleep(time.Second)
 	w.running = false
 	err = w.conn.Shutdown(time.Now())
 	if err != nil {
-		return
+		logrus.Error(err)
 	}
 	w.wg.Wait()
 	w.conn.Close()
-	return
 }
 
 func (w *ProcessWorker) initDB() (err error) {

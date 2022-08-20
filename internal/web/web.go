@@ -79,10 +79,9 @@ func (w *WebWorker) Start() (err error) {
 	return
 }
 
-func (w *WebWorker) Stop() (err error) {
+func (w *WebWorker) Stop() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	w.server.Shutdown(ctx)
 	w.wg.Wait()
-	return
 }
