@@ -18,13 +18,13 @@ type Worker struct {
 }
 
 type Event struct {
-	ID      uint64 `json:"id"`
+	ID      int64  `json:"id"`
 	Workdir string `json:"workdir"`
 	Binary  string `json:"binary"`
 	Argv    string `json:"argv"`
-	Count   uint64 `json:"count"`
-	Judge   uint64 `json:"judge"`
-	Status  uint64 `json:"status"`
+	Count   int64  `json:"count"`
+	Judge   int64  `json:"judge"`
+	Status  int64  `json:"status"`
 }
 
 func Init(engine *gin.Engine, db *sql.DB) (err error) {
@@ -179,7 +179,7 @@ func (w *Worker) processPolicyUpdate(context *gin.Context) {
 		return
 	}
 
-	ok := w.updateStatus(uint64(request.ID), request.Status)
+	ok := w.updateStatus(int64(request.ID), request.Status)
 	if !ok {
 		render.Status(context, render.StatusProcessUpdatePolicyFailed)
 		return

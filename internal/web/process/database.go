@@ -40,7 +40,7 @@ func (w *Worker) queryLimitOffset(limit, offset int) (events []Event, err error)
 	return
 }
 
-func (w *Worker) updateStatus(id uint64, status int) bool {
+func (w *Worker) updateStatus(id int64, status int) bool {
 	stmt, err := w.db.Prepare(sqlUpdateProcessStatus)
 	if err != nil {
 		logrus.Error(err)

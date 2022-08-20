@@ -116,7 +116,7 @@ func (w *Worker) queryAllUser() (users []User, err error) {
 	return
 }
 
-func (w *Worker) updateUserInfo(id uint64, username, password, alias, permissions string) bool {
+func (w *Worker) updateUserInfo(id int64, username, password, alias, permissions string) bool {
 	stmt, err := w.db.Prepare(sqlUpdateUser)
 	if err != nil {
 		return false
@@ -138,7 +138,7 @@ func (w *Worker) updateUserInfo(id uint64, username, password, alias, permission
 	return affected == 1
 }
 
-func (w *Worker) deleteUser(id uint64) bool {
+func (w *Worker) deleteUser(id int64) bool {
 	stmt, err := w.db.Prepare(sqlDeleteUser)
 	if err != nil {
 		return false
