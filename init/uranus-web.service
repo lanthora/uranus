@@ -4,6 +4,8 @@ After=hackernel.service
 
 [Service]
 ExecStart=/usr/sbin/uranus-web
+Restart=always
+RestartSec=30
 
 [Install]
 WantedBy=multi-user.target

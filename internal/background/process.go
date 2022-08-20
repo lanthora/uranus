@@ -263,6 +263,7 @@ func (w *ProcessWorker) run() {
 	defer w.wg.Done()
 	w.dog = watchdog.New(10*time.Second, func() {
 		logrus.Error("osinfo::report timeout")
+		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 	})
 	defer w.dog.Stop()
 	for w.running {
