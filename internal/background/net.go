@@ -115,6 +115,10 @@ func (w *NetWorker) Stop() {
 		logrus.Error(err)
 	}
 
+	if ok := net.Disable(); !ok {
+		logrus.Error(net.ErrorDisable)
+	}
+
 	if ok := net.ClearPolicy(); !ok {
 		logrus.Error(net.ErrorClearPolicy)
 	}
@@ -146,6 +150,11 @@ func (w *NetWorker) initDB() (err error) {
 }
 
 func (w *NetWorker) initNetPolicy() (err error) {
+	if ok := net.ClearPolicy(); !ok {
+		logrus.Error(net.ErrorClearPolicy)
+		return
+	}
+
 	stmt, err := w.db.Prepare(sqlQueryNetPolicy)
 	if err != nil {
 		logrus.Error(err)

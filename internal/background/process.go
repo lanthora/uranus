@@ -122,11 +122,11 @@ func (w *ProcessWorker) Stop() {
 	}
 
 	if ok := process.Disable(); !ok {
-		logrus.Error("process protection disable failed")
+		logrus.Error(process.ErrorDisable)
 	}
 
 	if ok := process.ClearPolicy(); !ok {
-		logrus.Error("process protection clear failed")
+		logrus.Error(process.ErrorClearPolicy)
 	}
 
 	time.Sleep(time.Second)
@@ -156,6 +156,11 @@ func (w *ProcessWorker) initDB() (err error) {
 }
 
 func (w *ProcessWorker) initTrustedCmd() (err error) {
+	if ok := process.ClearPolicy(); !ok {
+		logrus.Error(process.ErrorClearPolicy)
+		return
+	}
+
 	stmt, err := w.db.Prepare(sqlQueryAllowedProcesses)
 	if err != nil {
 		logrus.Error(err)

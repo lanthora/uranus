@@ -117,11 +117,11 @@ func (w *FileWorker) Stop() {
 	}
 
 	if ok := file.Disable(); !ok {
-		logrus.Error("file protection disable failed")
+		logrus.Error(file.ErrorDisable)
 	}
 
 	if ok := file.ClearPolicy(); !ok {
-		logrus.Error("file protection clear failed")
+		logrus.Error(file.ErrorClearPolicy)
 	}
 
 	time.Sleep(time.Second)
@@ -244,6 +244,11 @@ func (w *FileWorker) setPolicyThenGetExceptionPolicies() (policies []file.Policy
 }
 
 func (w *FileWorker) initFilePolicy() (err error) {
+	if ok := file.ClearPolicy(); !ok {
+		logrus.Error(file.ErrorClearPolicy)
+		return
+	}
+
 	policies, err := w.setPolicyThenGetExceptionPolicies()
 	if err != nil {
 		logrus.Error(err)
