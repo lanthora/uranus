@@ -19,7 +19,7 @@ Uranus 的存在就是为了解决 hackernel 遗留下的问题:
 
 ```bash
 # 设置使用国内镜像
-export GOPROXY=https://mirrors.aliyun.com/goproxy/
+export GOPROXY=https://goproxy.cn
 
 # 安装依赖
 make init
