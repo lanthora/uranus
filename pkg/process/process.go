@@ -34,6 +34,7 @@ var (
 	ErrorDisable     = errors.New("process protection disable failed")
 	ErrorUpdateJudge = errors.New("process protection update Judge failed")
 	ErrorInvalidCmd  = errors.New("invalid cmd")
+	ErrorClearPolicy = errors.New("clear process policy failed")
 )
 
 func SplitCmd(cmd string) (workdir, binary, argv string, err error) {
