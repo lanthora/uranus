@@ -6,6 +6,7 @@ After=hackernel.service
 ExecStart=/usr/sbin/uranus-web
 Restart=always
 RestartSec=30
+Environment="GOMEMLIMIT=50MiB"
 
 [Install]
 WantedBy=multi-user.target
