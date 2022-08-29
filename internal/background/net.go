@@ -7,11 +7,11 @@ import (
 	"sync"
 	"syscall"
 	"time"
-	"uranus/internal/config"
-	"uranus/pkg/connector"
-	"uranus/pkg/net"
-	"uranus/pkg/watchdog"
 
+	"github.com/lanthora/uranus/internal/config"
+	"github.com/lanthora/uranus/pkg/connector"
+	"github.com/lanthora/uranus/pkg/net"
+	"github.com/lanthora/uranus/pkg/watchdog"
 	"github.com/sirupsen/logrus"
 )
 

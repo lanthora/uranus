@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
-	"uranus/pkg/connector"
 
+	"github.com/lanthora/uranus/pkg/connector"
 	"github.com/sirupsen/logrus"
 )
 

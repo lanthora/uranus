@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"time"
-	"uranus/pkg/connector"
+
+	"github.com/lanthora/uranus/pkg/connector"
 )
 
 const (

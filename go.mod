@@ -1,4 +1,4 @@
-module uranus
+module github.com/lanthora/uranus
 
 go 1.19
 

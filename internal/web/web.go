@@ -9,13 +9,12 @@ import (
 	"syscall"
 	"time"
 
-	"uranus/internal/web/control"
-	"uranus/internal/web/file"
-	"uranus/internal/web/net"
-	"uranus/internal/web/process"
-	"uranus/internal/web/user"
-
 	"github.com/gin-gonic/gin"
+	"github.com/lanthora/uranus/internal/web/control"
+	"github.com/lanthora/uranus/internal/web/file"
+	"github.com/lanthora/uranus/internal/web/net"
+	"github.com/lanthora/uranus/internal/web/process"
+	"github.com/lanthora/uranus/internal/web/user"
 	"github.com/sirupsen/logrus"
 )
 
