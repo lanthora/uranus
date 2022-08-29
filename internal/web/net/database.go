@@ -2,8 +2,7 @@
 package net
 
 import (
-	"uranus/pkg/net"
-
+	"github.com/lanthora/uranus/pkg/net"
 	"github.com/sirupsen/logrus"
 )
 

@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"time"
-	"uranus/internal/web/render"
-	"uranus/pkg/connector"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lanthora/uranus/internal/web/render"
+	"github.com/lanthora/uranus/pkg/connector"
 )
 
 func Init(engine *gin.Engine, db *sql.DB) (err error) {

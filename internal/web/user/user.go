@@ -4,12 +4,12 @@ package user
 import (
 	"database/sql"
 	"net/http"
-	"uranus/internal/web/render"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gobwas/glob"
 	"github.com/google/uuid"
 	lru "github.com/hashicorp/golang-lru"
+	"github.com/lanthora/uranus/internal/web/render"
 )
 
 type Worker struct {

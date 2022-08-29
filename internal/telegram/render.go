@@ -4,7 +4,8 @@ package telegram
 import (
 	"encoding/json"
 	"fmt"
-	"uranus/pkg/process"
+
+	"github.com/lanthora/uranus/pkg/process"
 )
 
 func RenderAuditProcReport(text string) (richText string) {

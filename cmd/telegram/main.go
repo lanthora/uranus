@@ -7,10 +7,10 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
-	"uranus/internal/background"
-	"uranus/internal/telegram"
-	"uranus/pkg/logger"
 
+	"github.com/lanthora/uranus/internal/background"
+	"github.com/lanthora/uranus/internal/telegram"
+	"github.com/lanthora/uranus/pkg/logger"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"

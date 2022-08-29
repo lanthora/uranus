@@ -3,11 +3,11 @@ package process
 
 import (
 	"database/sql"
-	"uranus/internal/config"
-	"uranus/internal/web/render"
-	"uranus/pkg/process"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lanthora/uranus/internal/config"
+	"github.com/lanthora/uranus/internal/web/render"
+	"github.com/lanthora/uranus/pkg/process"
 )
 
 type Worker struct {

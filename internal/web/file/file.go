@@ -3,11 +3,11 @@ package file
 
 import (
 	"database/sql"
-	"uranus/internal/config"
-	"uranus/internal/web/render"
-	"uranus/pkg/file"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lanthora/uranus/internal/config"
+	"github.com/lanthora/uranus/internal/web/render"
+	"github.com/lanthora/uranus/pkg/file"
 	"github.com/sirupsen/logrus"
 )
 

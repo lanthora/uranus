@@ -5,9 +5,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"uranus/internal/sample"
-	"uranus/pkg/logger"
 
+	"github.com/lanthora/uranus/internal/sample"
+	"github.com/lanthora/uranus/pkg/logger"
 	"github.com/sirupsen/logrus"
 )
 

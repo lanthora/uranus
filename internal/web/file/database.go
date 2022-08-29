@@ -3,8 +3,8 @@ package file
 
 import (
 	"time"
-	"uranus/pkg/file"
 
+	"github.com/lanthora/uranus/pkg/file"
 	"github.com/sirupsen/logrus"
 )
 
