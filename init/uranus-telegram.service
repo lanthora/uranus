@@ -3,7 +3,7 @@ Description=Uranus Telegram
 After=hackernel.service
 
 [Service]
-ExecStart=/usr/sbin/uranus-telegram
+ExecStart=/usr/bin/uranus-telegram
 Restart=always
 RestartSec=30
 

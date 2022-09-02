@@ -3,7 +3,7 @@ Description=Uranus Web
 After=hackernel.service
 
 [Service]
-ExecStart=/usr/sbin/uranus-web
+ExecStart=/usr/bin/uranus-web
 Restart=always
 RestartSec=30
 Environment="GOMEMLIMIT=50MiB"
