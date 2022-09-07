@@ -7,5 +7,5 @@ do
         cd $path
         bin="$path/uranus-$module"
         printf "[%s][build] %s\n" $(date +"%H:%M:%S") $bin
-        go build -o $bin -ldflags="-X 'uranus/pkg/logger.BuildDir=$root/'"
+        go build -o $bin -ldflags="-X 'github.com/lanthora/uranus/pkg/logger.BuildDir=$root/'"
 done
