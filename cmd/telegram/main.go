@@ -3,6 +3,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -14,6 +15,11 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+)
+
+var (
+	ErrorInvalidToken = errors.New("the token is empty, please get the token from BotFather")
+	ErrorInvalidOwner = errors.New("chat id is 0, please use correct id")
 )
 
 func main() {
@@ -31,7 +37,13 @@ func main() {
 	}
 
 	token := config.GetString("token")
+	if len(token) == 0 {
+		logrus.Fatal(ErrorInvalidToken)
+	}
 	ownerID := config.GetInt64("id")
+	if ownerID == 0 {
+		logrus.Fatal(ErrorInvalidOwner)
+	}
 	dbFile := config.GetString("db")
 	dbOptions := "?cache=shared&mode=rwc&_journal_mode=WAL"
 	dataSourceName := dbFile + dbOptions

@@ -1,10 +1,8 @@
-# uranus-telegram 配置文件模板,启动时加载 /etc/hackernel/telegram.yaml
-
-# 从 Telegram @BotFather 获取的 token
+# Token from Telegram @BotFather
 token: ""
+
 # chat ID
 id: 0
 
-# 数据库文件路径
+# SQLite3 database file
 db: "/var/lib/hackernel/telegram.db"
-
