@@ -1,9 +1,5 @@
-# uranus-web 配置文件模板,启动时加载 /etc/hackernel/web.yaml
+# SQLite3 database file
+db: "/var/lib/hackernel/web.db"
 
-# 数据库文件路径.真实场景可以使用以下配置
-# db: "/var/lib/hackernel/web.db"
-# 当前配置表示使用内存,进程退出后数据消失,方便开发和调试
-db: "file::memory:"
-
-# web 服务监听的地址
+# web service listening address
 listen: "0.0.0.0:80"
