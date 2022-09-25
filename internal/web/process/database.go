@@ -6,9 +6,11 @@ import (
 )
 
 const (
-	sqlQueryProcessLimitOffset = `select id,workdir,binary,argv,count,judge,status from process_event limit ? offset ?`
-	sqlUpdateProcessStatus     = `update process_event set status=? where id=?`
-	sqlQueryProcessCmdById     = `select cmd from process_event where id=?`
+	sqlQueryProcessLimitOffset      = `select id,workdir,binary,argv,count,judge,status from process_event limit ? offset ?`
+	sqlUpdateProcessStatus          = `update process_event set status=? where id=?`
+	sqlQueryProcessCmdById          = `select cmd from process_event where id=?`
+	sqlQueryProcessPolicyCount      = `select count(*) from process_event`
+	sqlQueryProcessUnreadEventCount = `select count(*) from process_event where status=0`
 )
 
 func (w *Worker) queryLimitOffset(limit, offset int) (events []Event, err error) {
@@ -70,5 +72,35 @@ func (w *Worker) queryCmdById(id int) (cmd string, err error) {
 	defer stmt.Close()
 
 	err = stmt.QueryRow(id).Scan(&cmd)
+	return
+}
+
+func (w *Worker) queryProcessPolicyCount() (count int, err error) {
+	stmt, err := w.db.Prepare(sqlQueryProcessPolicyCount)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow().Scan(&count)
+	if err != nil {
+		logrus.Error(err)
+	}
+	return
+}
+
+func (w *Worker) queryProcessUnreadEventCount() (count int, err error) {
+	stmt, err := w.db.Prepare(sqlQueryProcessUnreadEventCount)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow().Scan(&count)
+	if err != nil {
+		logrus.Error(err)
+	}
 	return
 }
