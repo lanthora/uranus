@@ -13,6 +13,8 @@ const (
 	sqlQueryNetEventLimitOffset  = `select id,protocol,saddr,daddr,sport,dport,timestamp,policy,status from net_event limit ? offset ?`
 	sqlDeleteNetEventById        = `delete from net_event where id=?`
 	sqlUpdateNetEventStatusById  = `update net_event set status=? where id=?`
+	sqlQueryNetPolicyCount       = `select count(*) from net_policy`
+	sqlQueryNetUnreadEventCount  = `select count(*) from net_event where status=0`
 )
 
 func (w *Worker) insertNetPolicy(policy *net.Policy) (id int64, err error) {
@@ -161,6 +163,36 @@ func (w *Worker) updateNetEventStatusById(status, id int) (err error) {
 	if err != nil {
 		logrus.Error(err)
 		return
+	}
+	return
+}
+
+func (w *Worker) queryNetPolicyCount() (count int, err error) {
+	stmt, err := w.db.Prepare(sqlQueryNetPolicyCount)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow().Scan(&count)
+	if err != nil {
+		logrus.Error(err)
+	}
+	return
+}
+
+func (w *Worker) queryNetUnreadEventCount() (count int, err error) {
+	stmt, err := w.db.Prepare(sqlQueryNetUnreadEventCount)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow().Scan(&count)
+	if err != nil {
+		logrus.Error(err)
 	}
 	return
 }

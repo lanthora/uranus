@@ -50,10 +50,23 @@ func (w *Worker) showModuleStatus(context *gin.Context) {
 		status = net.StatusDisable
 	}
 
+	policyCount, err := w.queryNetPolicyCount()
+	if err != nil {
+		policyCount = 0
+	}
+	unreadEventCount, err := w.queryNetUnreadEventCount()
+	if err != nil {
+		unreadEventCount = 0
+	}
+
 	response := struct {
-		Status int `json:"status"`
+		Status           int `json:"status"`
+		PolicyCount      int `json:"policyCount"`
+		UnreadEventCount int `json:"unreadEventCount"`
 	}{
-		Status: status,
+		Status:           status,
+		PolicyCount:      policyCount,
+		UnreadEventCount: unreadEventCount,
 	}
 
 	render.Success(context, response)

@@ -17,6 +17,8 @@ const (
 	sqlDeleteFilePolicyById       = `delete from file_policy where id=?`
 	sqlDeleteFileEventById        = `delete from file_event where id=?`
 	sqlUpdateFileEventStatusById  = `update file_event set status=? where id=?`
+	sqlQueryFileNormalPolicyCount = `select count(*) from file_policy where status=0`
+	sqlQueryFileUnreadEventCount  = `select count(*) from file_event where status=0`
 )
 
 func (w *Worker) insertFilePolicy(path string, fsid, ino int64, perm, status int) (err error) {
@@ -167,6 +169,36 @@ func (w *Worker) updateFileEventStatusById(status, id int) (err error) {
 	if err != nil {
 		logrus.Error(err)
 		return
+	}
+	return
+}
+
+func (w *Worker) queryFileNormalPolicyCount() (count int, err error) {
+	stmt, err := w.db.Prepare(sqlQueryFileNormalPolicyCount)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow().Scan(&count)
+	if err != nil {
+		logrus.Error(err)
+	}
+	return
+}
+
+func (w *Worker) queryFileUnreadEventCount() (count int, err error) {
+	stmt, err := w.db.Prepare(sqlQueryFileUnreadEventCount)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow().Scan(&count)
+	if err != nil {
+		logrus.Error(err)
 	}
 	return
 }
