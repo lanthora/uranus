@@ -36,14 +36,14 @@ func Init(engine *gin.Engine, db *sql.DB) (err error) {
 
 	w.engine.Use(w.middleware())
 
-	w.engine.POST("/user/login", w.userLogin)
-	w.engine.POST("/user/alive", w.userAlive)
-	w.engine.POST("/user/info", w.userInfo)
-	w.engine.POST("/user/logout", w.userLogout)
-	w.engine.POST("/user/add", w.userAdd)
-	w.engine.POST("/user/delete", w.userDelete)
-	w.engine.POST("/user/update", w.userUpdate)
-	w.engine.POST("/user/list", w.userList)
+	w.engine.POST("/auth/login", w.login)
+	w.engine.POST("/auth/showCurrentUserInfo", w.showCurrentUserInfo)
+	w.engine.POST("/auth/logout", w.logout)
+
+	w.engine.POST("/admin/addUser", w.addUser)
+	w.engine.POST("/admin/deleteUser", w.deleteUser)
+	w.engine.POST("/admin/updateUserInfo", w.updateUserInfo)
+	w.engine.POST("/admin/listAllUsers", w.listAllUsers)
 
 	if err = w.initUserTable(); err != nil {
 		return
@@ -65,7 +65,7 @@ func (w *Worker) middleware() gin.HandlerFunc {
 			context.Next()
 			return
 		}
-		if context.Request.URL.Path == "/user/login" {
+		if context.Request.URL.Path == "/auth/login" {
 			context.Next()
 			return
 		}
@@ -98,7 +98,7 @@ func (w *Worker) middleware() gin.HandlerFunc {
 	}
 }
 
-func (w *Worker) userLogin(context *gin.Context) {
+func (w *Worker) login(context *gin.Context) {
 	request := struct {
 		Username string `json:"username" binding:"required"`
 		Password string `json:"password" binding:"required"`
@@ -141,11 +141,7 @@ func (w *Worker) userLogin(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) userAlive(context *gin.Context) {
-	render.Status(context, render.StatusSuccess)
-}
-
-func (w *Worker) userInfo(context *gin.Context) {
+func (w *Worker) showCurrentUserInfo(context *gin.Context) {
 	session, err := context.Cookie("session")
 	if err != nil {
 		render.Status(context, render.StatusUserNotLoggedIn)
@@ -161,7 +157,7 @@ func (w *Worker) userInfo(context *gin.Context) {
 	render.Success(context, current)
 }
 
-func (w *Worker) userLogout(context *gin.Context) {
+func (w *Worker) logout(context *gin.Context) {
 	session, _ := context.Cookie("session")
 	w.loggedUser.Remove(session)
 
@@ -169,7 +165,7 @@ func (w *Worker) userLogout(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) userAdd(context *gin.Context) {
+func (w *Worker) addUser(context *gin.Context) {
 	request := struct {
 		Username    string `json:"username" binding:"required"`
 		Password    string `json:"password" binding:"required"`
@@ -189,7 +185,7 @@ func (w *Worker) userAdd(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) userList(context *gin.Context) {
+func (w *Worker) listAllUsers(context *gin.Context) {
 	users, err := w.queryAllUser()
 	if err != nil {
 		render.Status(context, render.StatusUserQueryUserFailed)
@@ -198,7 +194,7 @@ func (w *Worker) userList(context *gin.Context) {
 	render.Success(context, users)
 }
 
-func (w *Worker) userDelete(context *gin.Context) {
+func (w *Worker) deleteUser(context *gin.Context) {
 	request := struct {
 		UserID int64 `json:"userID" binding:"number"`
 	}{}
@@ -207,14 +203,14 @@ func (w *Worker) userDelete(context *gin.Context) {
 		render.Status(context, render.StatusInvalidArgument)
 		return
 	}
-	if ok := w.deleteUser(request.UserID); !ok {
+	if ok := w.deleteUserByID(request.UserID); !ok {
 		render.Status(context, render.StatusUserDeleteUserFailed)
 		return
 	}
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) userUpdate(context *gin.Context) {
+func (w *Worker) updateUserInfo(context *gin.Context) {
 	request := struct {
 		UserID      int64  `json:"userID" binding:"number"`
 		Username    string `json:"username" binding:"required"`
@@ -228,8 +224,8 @@ func (w *Worker) userUpdate(context *gin.Context) {
 		return
 	}
 
-	if ok := w.updateUserInfo(request.UserID, request.Username, request.Password, request.AliasName, request.Permissions); !ok {
-		render.Status(context, render.StatusUserCreateUserFailed)
+	if ok := w.updateUserInfoByID(request.UserID, request.Username, request.Password, request.AliasName, request.Permissions); !ok {
+		render.Status(context, render.StatusUserUpdateUserFailed)
 		return
 	}
 	render.Status(context, render.StatusSuccess)

@@ -28,22 +28,24 @@ func Init(engine *gin.Engine, db *sql.DB) (err error) {
 		db:     db,
 		config: config,
 	}
-	w.engine.POST("/file/core/status", w.fileCoreStatus)
-	w.engine.POST("/file/core/enable", w.fileCoreEnable)
-	w.engine.POST("/file/core/disable", w.fileCoreDisable)
-	w.engine.POST("/file/policy/add", w.filePolicyAdd)
-	w.engine.POST("/file/policy/update", w.filePolicyUpdate)
-	w.engine.POST("/file/policy/delete", w.filePolicyDelete)
-	w.engine.POST("/file/policy/clear", w.filePolicyClear)
-	w.engine.POST("/file/policy/list", w.filePolicyList)
-	w.engine.POST("/file/policy/query", w.filePolicyQuery)
-	w.engine.POST("/file/event/list", w.fileEventList)
-	w.engine.POST("/file/event/delete", w.fileEventDelete)
-	w.engine.POST("/file/event/update", w.fileEventUpdate)
+	w.engine.POST("/file/enableModule", w.enableModule)
+	w.engine.POST("/file/disableModule", w.disableModule)
+	w.engine.POST("/file/showModuleStatus", w.showModuleStatus)
+
+	w.engine.POST("/file/addPolicy", w.addPolicy)
+	w.engine.POST("/file/updatePolicy", w.updatePolicy)
+	w.engine.POST("/file/deletePolicy", w.deletePolicy)
+	w.engine.POST("/file/clearPolicies", w.clearPolicies)
+	w.engine.POST("/file/listPolicies", w.listPolicies)
+	w.engine.POST("/file/showPolicy", w.showPolicy)
+
+	w.engine.POST("/file/updateEventStatus", w.updateEventStatus)
+	w.engine.POST("/file/deleteEvent", w.deleteEvent)
+	w.engine.POST("/file/listEvents", w.listEvents)
 	return
 }
 
-func (w *Worker) fileCoreStatus(context *gin.Context) {
+func (w *Worker) showModuleStatus(context *gin.Context) {
 	status, err := w.config.GetInteger(config.FileModuleStatus)
 	if err != nil {
 		status = file.StatusDisable
@@ -58,7 +60,7 @@ func (w *Worker) fileCoreStatus(context *gin.Context) {
 	render.Success(context, response)
 }
 
-func (w *Worker) fileCoreEnable(context *gin.Context) {
+func (w *Worker) enableModule(context *gin.Context) {
 	if err := w.config.SetInteger(config.FileModuleStatus, file.StatusEnable); err != nil {
 		render.Status(context, render.StatusProcessEnableFailed)
 		return
@@ -71,7 +73,7 @@ func (w *Worker) fileCoreEnable(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) fileCoreDisable(context *gin.Context) {
+func (w *Worker) disableModule(context *gin.Context) {
 	if err := w.config.SetInteger(config.FileModuleStatus, file.StatusDisable); err != nil {
 		render.Status(context, render.StatusFileDisableFailed)
 		return
@@ -84,7 +86,7 @@ func (w *Worker) fileCoreDisable(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) filePolicyAdd(context *gin.Context) {
+func (w *Worker) addPolicy(context *gin.Context) {
 	request := struct {
 		Path string `json:"path" binding:"required"`
 		Perm int    `json:"perm" binding:"number"`
@@ -119,7 +121,7 @@ func (w *Worker) filePolicyAdd(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) filePolicyUpdate(context *gin.Context) {
+func (w *Worker) updatePolicy(context *gin.Context) {
 	request := struct {
 		ID   int `json:"id" binding:"number"`
 		Perm int `json:"perm" binding:"number"`
@@ -162,7 +164,7 @@ func (w *Worker) filePolicyUpdate(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) filePolicyDelete(context *gin.Context) {
+func (w *Worker) deletePolicy(context *gin.Context) {
 	request := struct {
 		ID int `json:"id" binding:"number"`
 	}{}
@@ -193,11 +195,11 @@ func (w *Worker) filePolicyDelete(context *gin.Context) {
 }
 
 // TODO: 清空配置列表
-func (w *Worker) filePolicyClear(context *gin.Context) {
+func (w *Worker) clearPolicies(context *gin.Context) {
 	render.Status(context, render.StatusUnknownError)
 }
 
-func (w *Worker) filePolicyList(context *gin.Context) {
+func (w *Worker) listPolicies(context *gin.Context) {
 	request := struct {
 		Limit  int `json:"limit" binding:"number"`
 		Offset int `json:"offset" binding:"number"`
@@ -217,7 +219,7 @@ func (w *Worker) filePolicyList(context *gin.Context) {
 	render.Success(context, policies)
 }
 
-func (w *Worker) filePolicyQuery(context *gin.Context) {
+func (w *Worker) showPolicy(context *gin.Context) {
 	request := struct {
 		ID int `json:"id" binding:"number"`
 	}{}
@@ -235,7 +237,7 @@ func (w *Worker) filePolicyQuery(context *gin.Context) {
 	render.Success(context, policy)
 }
 
-func (w *Worker) fileEventList(context *gin.Context) {
+func (w *Worker) listEvents(context *gin.Context) {
 	request := struct {
 		Limit  int `json:"limit" binding:"number"`
 		Offset int `json:"offset" binding:"number"`
@@ -254,7 +256,7 @@ func (w *Worker) fileEventList(context *gin.Context) {
 	render.Success(context, events)
 }
 
-func (w *Worker) fileEventDelete(context *gin.Context) {
+func (w *Worker) deleteEvent(context *gin.Context) {
 	request := struct {
 		ID int `json:"id" binding:"number"`
 	}{}
@@ -272,7 +274,7 @@ func (w *Worker) fileEventDelete(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) fileEventUpdate(context *gin.Context) {
+func (w *Worker) updateEventStatus(context *gin.Context) {
 	request := struct {
 		Status int `json:"status" binding:"number"`
 		ID     int `json:"id" binding:"number"`

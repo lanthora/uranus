@@ -28,19 +28,23 @@ func Init(engine *gin.Engine, db *sql.DB) (err error) {
 		db:     db,
 		config: config,
 	}
-	w.engine.POST("/net/core/status", w.netCoreStatus)
-	w.engine.POST("/net/core/enable", w.netCoreEnable)
-	w.engine.POST("/net/core/disable", w.netCoreDisable)
-	w.engine.POST("/net/policy/add", w.netPolicyAdd)
-	w.engine.POST("/net/policy/delete", w.netPolicyDelete)
-	w.engine.POST("/net/policy/list", w.netPolicyList)
-	w.engine.POST("/net/event/list", w.netEventList)
-	w.engine.POST("/net/event/delete", w.netEventDelete)
-	w.engine.POST("/net/event/update", w.netEventUpdate)
+
+	w.engine.POST("/net/enableModule", w.enableModule)
+	w.engine.POST("/net/disableModule", w.disableModule)
+	w.engine.POST("/net/showModuleStatus", w.showModuleStatus)
+
+	w.engine.POST("/net/addPolicy", w.addPolicy)
+	w.engine.POST("/net/deletePolicy", w.deletePolicy)
+	w.engine.POST("/net/listPolicies", w.listPolicies)
+
+	w.engine.POST("/net/updateEventStatus", w.updateEventStatus)
+	w.engine.POST("/net/deleteEvent", w.deleteEvent)
+	w.engine.POST("/net/listEvents", w.listEvents)
+
 	return
 }
 
-func (w *Worker) netCoreStatus(context *gin.Context) {
+func (w *Worker) showModuleStatus(context *gin.Context) {
 	status, err := w.config.GetInteger(config.NetModuleStatus)
 	if err != nil {
 		status = net.StatusDisable
@@ -55,7 +59,7 @@ func (w *Worker) netCoreStatus(context *gin.Context) {
 	render.Success(context, response)
 }
 
-func (w *Worker) netCoreEnable(context *gin.Context) {
+func (w *Worker) enableModule(context *gin.Context) {
 	if err := w.config.SetInteger(config.NetModuleStatus, net.StatusEnable); err != nil {
 		render.Status(context, render.StatusProcessEnableFailed)
 		return
@@ -68,7 +72,7 @@ func (w *Worker) netCoreEnable(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) netCoreDisable(context *gin.Context) {
+func (w *Worker) disableModule(context *gin.Context) {
 	if err := w.config.SetInteger(config.NetModuleStatus, net.StatusDisable); err != nil {
 		render.Status(context, render.StatusNetDisableFailed)
 		return
@@ -81,7 +85,7 @@ func (w *Worker) netCoreDisable(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) netPolicyAdd(context *gin.Context) {
+func (w *Worker) addPolicy(context *gin.Context) {
 	request := net.Policy{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -104,7 +108,7 @@ func (w *Worker) netPolicyAdd(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) netPolicyDelete(context *gin.Context) {
+func (w *Worker) deletePolicy(context *gin.Context) {
 	request := struct {
 		ID int `json:"id" binding:"number"`
 	}{}
@@ -134,7 +138,7 @@ func (w *Worker) netPolicyDelete(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) netPolicyList(context *gin.Context) {
+func (w *Worker) listPolicies(context *gin.Context) {
 	request := struct {
 		Limit  int `json:"limit" binding:"number"`
 		Offset int `json:"offset" binding:"number"`
@@ -154,7 +158,7 @@ func (w *Worker) netPolicyList(context *gin.Context) {
 	render.Success(context, policies)
 }
 
-func (w *Worker) netEventList(context *gin.Context) {
+func (w *Worker) listEvents(context *gin.Context) {
 	request := struct {
 		Limit  int `json:"limit" binding:"number"`
 		Offset int `json:"offset" binding:"number"`
@@ -173,7 +177,7 @@ func (w *Worker) netEventList(context *gin.Context) {
 	render.Success(context, events)
 }
 
-func (w *Worker) netEventDelete(context *gin.Context) {
+func (w *Worker) deleteEvent(context *gin.Context) {
 	request := struct {
 		ID int `json:"id" binding:"number"`
 	}{}
@@ -191,7 +195,7 @@ func (w *Worker) netEventDelete(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) netEventUpdate(context *gin.Context) {
+func (w *Worker) updateEventStatus(context *gin.Context) {
 	request := struct {
 		Status int `json:"status" binding:"number"`
 		ID     int `json:"id" binding:"number"`
