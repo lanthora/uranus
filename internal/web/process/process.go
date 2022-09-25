@@ -37,20 +37,23 @@ func Init(engine *gin.Engine, db *sql.DB) (err error) {
 		db:     db,
 		config: config,
 	}
-	w.engine.POST("/process/core/status", w.processCoreStatus)
-	w.engine.POST("/process/core/enable", w.processCoreEnable)
-	w.engine.POST("/process/core/disable", w.processCoreDisable)
-	w.engine.POST("/process/audit/status", w.processAuditStatus)
-	w.engine.POST("/process/audit/update", w.processAuditUpdate)
-	w.engine.POST("/process/event/list", w.processEventList)
-	w.engine.POST("/process/event/delete", w.processEventDelete)
-	w.engine.POST("/process/policy/update", w.processPolicyUpdate)
-	w.engine.POST("/process/trust/update", w.processTrustUpdate)
-	w.engine.POST("/process/trust/status", w.processTrustStatus)
+	w.engine.POST("/process/enableModule", w.enableModule)
+	w.engine.POST("/process/disableModule", w.disableModule)
+	w.engine.POST("/process/showModuleStatus", w.showModuleStatus)
+
+	w.engine.POST("/process/updateWorkMode", w.updateWorkMode)
+	w.engine.POST("/process/showWorkMode", w.showWorkMode)
+
+	w.engine.POST("/process/updateEventStatus", w.updateEventStatus)
+	w.engine.POST("/process/deleteEvents", w.deleteEvents)
+	w.engine.POST("/process/listEvents", w.listEvents)
+
+	w.engine.POST("/process/updateDefaultEventStatus", w.updateDefaultEventStatus)
+	w.engine.POST("/process/showDefaultEventStatus", w.showDefaultEventStatus)
 	return
 }
 
-func (w *Worker) processCoreStatus(context *gin.Context) {
+func (w *Worker) showModuleStatus(context *gin.Context) {
 	status, err := w.config.GetInteger(config.ProcessModuleStatus)
 	if err != nil {
 		status = process.StatusDisable
@@ -64,7 +67,7 @@ func (w *Worker) processCoreStatus(context *gin.Context) {
 
 	render.Success(context, response)
 }
-func (w *Worker) processCoreEnable(context *gin.Context) {
+func (w *Worker) enableModule(context *gin.Context) {
 	if err := w.config.SetInteger(config.ProcessModuleStatus, process.StatusEnable); err != nil {
 		render.Status(context, render.StatusProcessEnableFailed)
 		return
@@ -76,7 +79,7 @@ func (w *Worker) processCoreEnable(context *gin.Context) {
 	}
 	render.Status(context, render.StatusSuccess)
 }
-func (w *Worker) processCoreDisable(context *gin.Context) {
+func (w *Worker) disableModule(context *gin.Context) {
 	if err := w.config.SetInteger(config.ProcessModuleStatus, process.StatusDisable); err != nil {
 		render.Status(context, render.StatusProcessDisableFailed)
 		return
@@ -89,7 +92,7 @@ func (w *Worker) processCoreDisable(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) processAuditStatus(context *gin.Context) {
+func (w *Worker) showWorkMode(context *gin.Context) {
 	judge, err := w.config.GetInteger(config.ProcessProtectionMode)
 	if err != nil {
 		judge = process.StatusJudgeDisable
@@ -104,7 +107,7 @@ func (w *Worker) processAuditStatus(context *gin.Context) {
 	render.Success(context, response)
 }
 
-func (w *Worker) processAuditUpdate(context *gin.Context) {
+func (w *Worker) updateWorkMode(context *gin.Context) {
 	request := struct {
 		Judge int `json:"judge" binding:"number"`
 	}{}
@@ -131,7 +134,7 @@ func (w *Worker) processAuditUpdate(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) processEventList(context *gin.Context) {
+func (w *Worker) listEvents(context *gin.Context) {
 	request := struct {
 		Limit  int `json:"limit" binding:"number"`
 		Offset int `json:"offset" binding:"number"`
@@ -150,7 +153,7 @@ func (w *Worker) processEventList(context *gin.Context) {
 	render.Success(context, events)
 }
 
-func (w *Worker) processPolicyUpdate(context *gin.Context) {
+func (w *Worker) updateEventStatus(context *gin.Context) {
 	request := struct {
 		ID     int `json:"id" binding:"number"`
 		Status int `json:"status" binding:"number"`
@@ -188,11 +191,11 @@ func (w *Worker) processPolicyUpdate(context *gin.Context) {
 }
 
 // TODO: 补充进程事件删除功能
-func (w *Worker) processEventDelete(context *gin.Context) {
+func (w *Worker) deleteEvents(context *gin.Context) {
 	render.Status(context, render.StatusUnknownError)
 }
 
-func (w *Worker) processTrustUpdate(context *gin.Context) {
+func (w *Worker) updateDefaultEventStatus(context *gin.Context) {
 	request := struct {
 		Status int `json:"status" binding:"number"`
 	}{}
@@ -207,7 +210,7 @@ func (w *Worker) processTrustUpdate(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) processTrustStatus(context *gin.Context) {
+func (w *Worker) showDefaultEventStatus(context *gin.Context) {
 	status, err := w.config.GetInteger(config.ProcessCmdDefaultStatus)
 	if err != nil {
 		status = process.StatusPending
