@@ -19,14 +19,19 @@ var contentType = map[string]string{
 }
 
 func front(context *gin.Context) {
-	filepath := context.Request.URL.String()
-	if filepath == "/" {
-		filepath = filepath + "index.html"
+	url := context.Request.URL.String()
+
+	filePath := "webui" + url
+	if data, err := staticFS.ReadFile(filePath); err == nil {
+		context.Data(http.StatusOK, contentType[path.Ext(url)], data)
+		return
 	}
-	filepath = "webui" + filepath
-	if data, err := staticFS.ReadFile(filepath); err == nil {
-		context.Data(http.StatusOK, contentType[path.Ext(filepath)], data)
-	} else {
-		context.Status(http.StatusNotFound)
+
+	indexPath := "webui/index.html"
+	if data, err := staticFS.ReadFile(indexPath); err == nil {
+		context.Data(http.StatusOK, contentType[path.Ext(url)], data)
+		return
 	}
+
+	context.Status(http.StatusNotFound)
 }
