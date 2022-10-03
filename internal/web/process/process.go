@@ -11,8 +11,7 @@ import (
 )
 
 type Worker struct {
-	engine *gin.Engine
-	db     *sql.DB
+	db *sql.DB
 
 	config *config.Config
 }
@@ -33,23 +32,22 @@ func Init(engine *gin.Engine, db *sql.DB) (err error) {
 		return
 	}
 	w := &Worker{
-		engine: engine,
 		db:     db,
 		config: config,
 	}
-	w.engine.POST("/process/enableModule", w.enableModule)
-	w.engine.POST("/process/disableModule", w.disableModule)
-	w.engine.POST("/process/showModuleStatus", w.showModuleStatus)
+	engine.POST("/process/enableModule", w.enableModule)
+	engine.POST("/process/disableModule", w.disableModule)
+	engine.POST("/process/showModuleStatus", w.showModuleStatus)
 
-	w.engine.POST("/process/updateWorkMode", w.updateWorkMode)
-	w.engine.POST("/process/showWorkMode", w.showWorkMode)
+	engine.POST("/process/updateWorkMode", w.updateWorkMode)
+	engine.POST("/process/showWorkMode", w.showWorkMode)
 
-	w.engine.POST("/process/updateEventStatus", w.updateEventStatus)
-	w.engine.POST("/process/deleteEvents", w.deleteEvents)
-	w.engine.POST("/process/listEvents", w.listEvents)
+	engine.POST("/process/updateEventStatus", w.updateEventStatus)
+	engine.POST("/process/deleteEvents", w.deleteEvents)
+	engine.POST("/process/listEvents", w.listEvents)
 
-	w.engine.POST("/process/updateDefaultEventStatus", w.updateDefaultEventStatus)
-	w.engine.POST("/process/showDefaultEventStatus", w.showDefaultEventStatus)
+	engine.POST("/process/updateDefaultEventStatus", w.updateDefaultEventStatus)
+	engine.POST("/process/showDefaultEventStatus", w.showDefaultEventStatus)
 	return
 }
 

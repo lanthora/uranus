@@ -12,8 +12,7 @@ import (
 )
 
 type Worker struct {
-	engine *gin.Engine
-	db     *sql.DB
+	db *sql.DB
 
 	config *config.Config
 }
@@ -24,22 +23,21 @@ func Init(engine *gin.Engine, db *sql.DB) (err error) {
 		return
 	}
 	w := &Worker{
-		engine: engine,
 		db:     db,
 		config: config,
 	}
 
-	w.engine.POST("/net/enableModule", w.enableModule)
-	w.engine.POST("/net/disableModule", w.disableModule)
-	w.engine.POST("/net/showModuleStatus", w.showModuleStatus)
+	engine.POST("/net/enableModule", w.enableModule)
+	engine.POST("/net/disableModule", w.disableModule)
+	engine.POST("/net/showModuleStatus", w.showModuleStatus)
 
-	w.engine.POST("/net/addPolicy", w.addPolicy)
-	w.engine.POST("/net/deletePolicy", w.deletePolicy)
-	w.engine.POST("/net/listPolicies", w.listPolicies)
+	engine.POST("/net/addPolicy", w.addPolicy)
+	engine.POST("/net/deletePolicy", w.deletePolicy)
+	engine.POST("/net/listPolicies", w.listPolicies)
 
-	w.engine.POST("/net/updateEventStatus", w.updateEventStatus)
-	w.engine.POST("/net/deleteEvent", w.deleteEvent)
-	w.engine.POST("/net/listEvents", w.listEvents)
+	engine.POST("/net/updateEventStatus", w.updateEventStatus)
+	engine.POST("/net/deleteEvent", w.deleteEvent)
+	engine.POST("/net/listEvents", w.listEvents)
 
 	return
 }

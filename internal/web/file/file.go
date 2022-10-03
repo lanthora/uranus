@@ -12,8 +12,7 @@ import (
 )
 
 type Worker struct {
-	engine *gin.Engine
-	db     *sql.DB
+	db *sql.DB
 
 	config *config.Config
 }
@@ -24,24 +23,23 @@ func Init(engine *gin.Engine, db *sql.DB) (err error) {
 		return
 	}
 	w := &Worker{
-		engine: engine,
 		db:     db,
 		config: config,
 	}
-	w.engine.POST("/file/enableModule", w.enableModule)
-	w.engine.POST("/file/disableModule", w.disableModule)
-	w.engine.POST("/file/showModuleStatus", w.showModuleStatus)
+	engine.POST("/file/enableModule", w.enableModule)
+	engine.POST("/file/disableModule", w.disableModule)
+	engine.POST("/file/showModuleStatus", w.showModuleStatus)
 
-	w.engine.POST("/file/addPolicy", w.addPolicy)
-	w.engine.POST("/file/updatePolicy", w.updatePolicy)
-	w.engine.POST("/file/deletePolicy", w.deletePolicy)
-	w.engine.POST("/file/clearPolicies", w.clearPolicies)
-	w.engine.POST("/file/listPolicies", w.listPolicies)
-	w.engine.POST("/file/showPolicy", w.showPolicy)
+	engine.POST("/file/addPolicy", w.addPolicy)
+	engine.POST("/file/updatePolicy", w.updatePolicy)
+	engine.POST("/file/deletePolicy", w.deletePolicy)
+	engine.POST("/file/clearPolicies", w.clearPolicies)
+	engine.POST("/file/listPolicies", w.listPolicies)
+	engine.POST("/file/showPolicy", w.showPolicy)
 
-	w.engine.POST("/file/updateEventStatus", w.updateEventStatus)
-	w.engine.POST("/file/deleteEvent", w.deleteEvent)
-	w.engine.POST("/file/listEvents", w.listEvents)
+	engine.POST("/file/updateEventStatus", w.updateEventStatus)
+	engine.POST("/file/deleteEvent", w.deleteEvent)
+	engine.POST("/file/listEvents", w.listEvents)
 	return
 }
 
