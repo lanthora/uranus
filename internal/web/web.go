@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lanthora/uranus/internal/web/control"
+	"github.com/lanthora/uranus/internal/web/ctrl"
 	"github.com/lanthora/uranus/internal/web/file"
 	"github.com/lanthora/uranus/internal/web/net"
 	"github.com/lanthora/uranus/internal/web/process"
@@ -63,7 +63,9 @@ func (w *WebWorker) Init() (err error) {
 		return
 	}
 
-	control.Init(engine, w.db)
+	if err = ctrl.Init(engine, w.db); err != nil {
+		return
+	}
 
 	w.server = &http.Server{
 		Addr:    w.addr,
