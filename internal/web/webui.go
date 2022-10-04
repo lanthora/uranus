@@ -24,7 +24,7 @@ func front(context *gin.Context) {
 
 	filePath := "webui" + url
 	if data, err := staticFS.ReadFile(filePath); err == nil {
-		context.Header("Cache-Control", "public")
+		context.Header("Cache-Control", "public, max-age=604800")
 		context.Data(http.StatusOK, contentType[path.Ext(filePath)], data)
 		return
 	}
