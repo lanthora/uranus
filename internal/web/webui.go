@@ -16,6 +16,7 @@ var contentType = map[string]string{
 	".html": "text/html; charset=UTF-8",
 	".css":  "text/css; charset=UTF-8",
 	".js":   "text/javascript; charset=UTF-8",
+	".ico":  "image/x-icon",
 }
 
 func front(context *gin.Context) {
@@ -23,13 +24,14 @@ func front(context *gin.Context) {
 
 	filePath := "webui" + url
 	if data, err := staticFS.ReadFile(filePath); err == nil {
-		context.Data(http.StatusOK, contentType[path.Ext(url)], data)
+		context.Header("Cache-Control", "public")
+		context.Data(http.StatusOK, contentType[path.Ext(filePath)], data)
 		return
 	}
 
 	indexPath := "webui/index.html"
 	if data, err := staticFS.ReadFile(indexPath); err == nil {
-		context.Data(http.StatusOK, contentType[path.Ext(url)], data)
+		context.Data(http.StatusOK, contentType[path.Ext(indexPath)], data)
 		return
 	}
 
