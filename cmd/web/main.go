@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"syscall"
 
 	"github.com/lanthora/uranus/internal/background"
+	"github.com/lanthora/uranus/internal/common"
 	"github.com/lanthora/uranus/internal/web"
 	"github.com/lanthora/uranus/pkg/logger"
 	_ "github.com/mattn/go-sqlite3"
@@ -31,10 +31,7 @@ func main() {
 	}
 
 	listen := config.GetString("listen")
-	dbFile := config.GetString("db")
-	dbOptions := "?cache=shared&mode=rwc&_journal_mode=WAL"
-	dataSourceName := dbFile + dbOptions
-	os.MkdirAll(filepath.Dir(dataSourceName), os.ModeDir)
+	dataSourceName := common.GetDataSourceNameFromConfig(config)
 	db, err := sql.Open("sqlite3", dataSourceName)
 	if err != nil {
 		logrus.Fatal(err)
