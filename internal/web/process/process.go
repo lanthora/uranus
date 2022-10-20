@@ -174,7 +174,7 @@ func (w *Worker) updateEventStatus(context *gin.Context) {
 		return
 	}
 
-	cmd, err := w.queryCmdById(request.ID)
+	workdir, binary, argv, err := w.queryCmdById(request.ID)
 	if err != nil {
 		render.Status(context, render.StatusInvalidArgument)
 		return
@@ -182,9 +182,9 @@ func (w *Worker) updateEventStatus(context *gin.Context) {
 
 	switch request.Status {
 	case process.StatusTrusted:
-		err = process.SetTrustedCmd(cmd)
+		err = process.SetTrustedCmd(workdir, binary, argv)
 	default:
-		err = process.SetUntrustedCmd(cmd)
+		err = process.SetUntrustedCmd(workdir, binary, argv)
 	}
 
 	if err != nil {

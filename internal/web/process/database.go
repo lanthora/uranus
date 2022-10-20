@@ -8,7 +8,7 @@ import (
 const (
 	sqlQueryProcessLimitOffset      = `select id,workdir,binary,argv,count,judge,status from process_event limit ? offset ?`
 	sqlUpdateProcessStatus          = `update process_event set status=? where id=?`
-	sqlQueryProcessCmdById          = `select cmd from process_event where id=?`
+	sqlQueryProcessCmdById          = `select workdir,binary,argv from process_event where id=?`
 	sqlQueryProcessPolicyCount      = `select count(*) from process_event`
 	sqlQueryProcessUnreadEventCount = `select count(*) from process_event where status=0`
 )
@@ -63,7 +63,7 @@ func (w *Worker) updateStatus(id int64, status int) bool {
 	return affected == 1
 }
 
-func (w *Worker) queryCmdById(id int) (cmd string, err error) {
+func (w *Worker) queryCmdById(id int) (workdir, binary, argv string, err error) {
 	stmt, err := w.db.Prepare(sqlQueryProcessCmdById)
 	if err != nil {
 		logrus.Error(err)
@@ -71,7 +71,7 @@ func (w *Worker) queryCmdById(id int) (cmd string, err error) {
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRow(id).Scan(&cmd)
+	err = stmt.QueryRow(id).Scan(&workdir, &binary, &argv)
 	return
 }
 

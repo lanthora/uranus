@@ -4,8 +4,6 @@ package telegram
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/lanthora/uranus/pkg/process"
 )
 
 func RenderAuditProcReport(text string) (richText string) {
@@ -17,10 +15,10 @@ func RenderAuditProcReport(text string) (richText string) {
 	}
 	judge := doc["judge"].(float64)
 
-	workdir, binary, argv, err := process.SplitCmd(doc["cmd"].(string))
-	if err != nil {
-		return
-	}
+	workdir := doc["workdir"].(string)
+	binary := doc["binary"].(string)
+	argv := doc["argv"].(string)
+
 	richText += "<b>进程审计</b>\n\n"
 	richText += "工作目录: "
 	richText += fmt.Sprintf("<u>%s</u>\n\n", workdir)
