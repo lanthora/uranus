@@ -4,8 +4,6 @@ package process
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/lanthora/uranus/pkg/connector"
@@ -36,21 +34,6 @@ var (
 	ErrorInvalidCmd  = errors.New("invalid cmd")
 	ErrorClearPolicy = errors.New("clear process policy failed")
 )
-
-func SplitCmd(cmd string) (workdir, binary, argv string, err error) {
-	raw := strings.Split(cmd, "\u001f")
-	if len(raw) < 3 {
-		err = ErrorInvalidCmd
-		return
-	}
-	workdir = raw[0]
-	binary = raw[1]
-	argv = raw[2]
-	for i := 3; i < len(raw); i++ {
-		argv += fmt.Sprintf(" %s", raw[i])
-	}
-	return
-}
 
 func UpdateJudge(judge int) bool {
 	request := map[string]interface{}{
@@ -126,10 +109,12 @@ func ClearPolicy() bool {
 	return response.Code == 0
 }
 
-func SetTrustedCmd(cmd string) (err error) {
+func SetTrustedCmd(workdir, binary, argv string) (err error) {
 	data := map[string]string{
-		"type": "user::proc::trusted::insert",
-		"cmd":  cmd,
+		"type":    "user::proc::trusted::insert",
+		"workdir": workdir,
+		"binary":  binary,
+		"argv":    argv,
 	}
 	b, err := json.Marshal(data)
 	if err != nil {
@@ -145,10 +130,12 @@ func SetTrustedCmd(cmd string) (err error) {
 	return
 }
 
-func SetUntrustedCmd(cmd string) (err error) {
+func SetUntrustedCmd(workdir, binary, argv string) (err error) {
 	data := map[string]string{
-		"type": "user::proc::trusted::delete",
-		"cmd":  cmd,
+		"type":    "user::proc::trusted::delete",
+		"workdir": workdir,
+		"binary":  binary,
+		"argv":    argv,
 	}
 	b, err := json.Marshal(data)
 	if err != nil {

@@ -16,11 +16,10 @@ import (
 )
 
 const (
-	sqlCreateProcessTable    = `create table if not exists process_event(id integer primary key autoincrement, cmd blob not null unique, workdir text not null, binary text not null, argv text not null, count integer not null, judge integer not null, status integer not null)`
-	sqlCreateProcessCmdIndex = `create unique index if not exists process_cmd_idx on process_event (cmd)`
-	sqlUpdateProcessCount    = `update process_event set count=count+1,judge=?,status=? where cmd=?`
-	sqlInsertProcessEvent    = `insert into process_event(cmd,workdir,binary,argv,count,judge,status) values(?,?,?,?,1,?,?)`
-	sqlQueryAllowedProcesses = `select cmd from process_event where status=2`
+	sqlCreateProcessTable    = `create table if not exists process_event(id integer primary key autoincrement, workdir text not null, binary text not null, argv text not null, count integer not null, judge integer not null, status integer not null)`
+	sqlUpdateProcessCount    = `update process_event set count=count+1,judge=?,status=? where workdir=? and binary=? and argv=?`
+	sqlInsertProcessEvent    = `insert into process_event(workdir,binary,argv,count,judge,status) values(?,?,?,1,?,?)`
+	sqlQueryAllowedProcesses = `select workdir,binary,argv from process_event where status=2`
 )
 
 type ProcessWorker struct {
@@ -146,12 +145,6 @@ func (w *ProcessWorker) initDB() (err error) {
 		return
 	}
 
-	_, err = w.db.Exec(sqlCreateProcessCmdIndex)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-
 	return
 }
 
@@ -174,12 +167,14 @@ func (w *ProcessWorker) initTrustedCmd() (err error) {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		cmd := ""
-		err = rows.Scan(&cmd)
+		workdir := ""
+		binary := ""
+		argv := ""
+		err = rows.Scan(&workdir, &binary, &argv)
 		if err != nil {
 			return
 		}
-		process.SetTrustedCmd(cmd)
+		process.SetTrustedCmd(workdir, binary, argv)
 	}
 	err = rows.Err()
 	if err != nil {
@@ -189,13 +184,13 @@ func (w *ProcessWorker) initTrustedCmd() (err error) {
 	return
 }
 
-func (w *ProcessWorker) updateCmd(cmd string, judge int) (err error) {
+func (w *ProcessWorker) updateCmd(workdir, binary, argv string, judge int) (err error) {
 	status, err := w.config.GetInteger(config.ProcessCmdDefaultStatus)
 	if err != nil {
 		status = process.StatusPending
 	}
 	if status == process.StatusTrusted && judge != process.StatusJudgeDefense {
-		process.SetTrustedCmd(cmd)
+		process.SetTrustedCmd(workdir, binary, argv)
 	}
 
 	stmt, err := w.db.Prepare(sqlUpdateProcessCount)
@@ -204,7 +199,7 @@ func (w *ProcessWorker) updateCmd(cmd string, judge int) (err error) {
 		return
 	}
 	defer stmt.Close()
-	result, err := stmt.Exec(judge, status, cmd)
+	result, err := stmt.Exec(judge, status, workdir, binary, argv)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -225,12 +220,8 @@ func (w *ProcessWorker) updateCmd(cmd string, judge int) (err error) {
 		return
 	}
 	defer stmt.Close()
-	workdir, binary, argv, err := process.SplitCmd(cmd)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-	_, err = stmt.Exec(cmd, workdir, binary, argv, judge, status)
+
+	_, err = stmt.Exec(workdir, binary, argv, judge, status)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -240,9 +231,11 @@ func (w *ProcessWorker) updateCmd(cmd string, judge int) (err error) {
 
 func (w *ProcessWorker) handleMsg(msg string) {
 	event := struct {
-		Type  string `json:"type"`
-		Cmd   string `json:"cmd"`
-		Judge int    `json:"judge"`
+		Type    string `json:"type"`
+		Workdir string `json:"workdir"`
+		Binary  string `json:"binary"`
+		Argv    string `json:"argv"`
+		Judge   int    `json:"judge"`
 	}{}
 
 	err := json.Unmarshal([]byte(msg), &event)
@@ -253,7 +246,7 @@ func (w *ProcessWorker) handleMsg(msg string) {
 	}
 	switch event.Type {
 	case "audit::proc::report":
-		err = w.updateCmd(event.Cmd, event.Judge)
+		err = w.updateCmd(event.Workdir, event.Binary, event.Argv, event.Judge)
 		if err != nil {
 			logrus.Error(err)
 		}
