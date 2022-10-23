@@ -7,9 +7,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/lanthora/uranus/internal/background"
 	"github.com/lanthora/uranus/internal/common"
 	"github.com/lanthora/uranus/internal/web"
+	"github.com/lanthora/uranus/internal/worker"
 	"github.com/lanthora/uranus/pkg/logger"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
@@ -38,9 +38,9 @@ func main() {
 	}
 	defer db.Close()
 
-	processWorker := background.NewProcessWorker(db)
-	fileWorker := background.NewFileWorker(db)
-	netWorker := background.NewNetWorker(db)
+	processWorker := worker.NewProcessWorker(db)
+	fileWorker := worker.NewFileWorker(db)
+	netWorker := worker.NewNetWorker(db)
 	webWorker := web.NewWorker(listen, db)
 
 	if err := processWorker.Init(); err != nil {

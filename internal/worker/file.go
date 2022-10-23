@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-package background
+package worker
 
 import (
 	"database/sql"
@@ -36,10 +36,10 @@ type FileWorker struct {
 }
 
 func NewFileWorker(db *sql.DB) *FileWorker {
-	worker := FileWorker{
+	w := FileWorker{
 		db: db,
 	}
-	return &worker
+	return &w
 }
 
 func (w *FileWorker) Init() (err error) {
