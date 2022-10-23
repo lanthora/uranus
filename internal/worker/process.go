@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-package background
+package worker
 
 import (
 	"database/sql"
@@ -33,10 +33,10 @@ type ProcessWorker struct {
 }
 
 func NewProcessWorker(db *sql.DB) *ProcessWorker {
-	worker := ProcessWorker{
+	w := ProcessWorker{
 		db: db,
 	}
-	return &worker
+	return &w
 }
 
 func (w *ProcessWorker) Init() (err error) {

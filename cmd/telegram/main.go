@@ -8,9 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/lanthora/uranus/internal/background"
 	"github.com/lanthora/uranus/internal/common"
 	"github.com/lanthora/uranus/internal/telegram"
+	"github.com/lanthora/uranus/internal/worker"
 	"github.com/lanthora/uranus/pkg/logger"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
@@ -53,7 +53,7 @@ func main() {
 	defer db.Close()
 
 	telegramWorker := telegram.NewWorker(token, ownerID)
-	processWorker := background.NewProcessWorker(db)
+	processWorker := worker.NewProcessWorker(db)
 
 	if err := telegram.SetStandaloneMode(db); err != nil {
 		logrus.Fatal(err)
