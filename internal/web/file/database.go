@@ -11,9 +11,9 @@ import (
 const (
 	sqlInsertFilePolicy           = `insert into file_policy(path,fsid,ino,perm,timestamp,status) values(?,?,?,?,?,?)`
 	sqlUpdateFilePolicyById       = `update file_policy set fsid=?,ino=?,perm=?,timestamp=?,status=? where id=?`
-	sqlQueryFileEventLimitOffset  = `select id,path,fsid,ino,perm,timestamp,policy,status from file_event limit ? offset ?`
+	sqlQueryFileEventLimitOffset  = `select id,path,fsid,ino,perm,timestamp,policy,status from file_event where id>? limit ?`
 	sqlQueryFilePolicyById        = `select id,path,fsid,ino,perm,timestamp,status from file_policy where id=?`
-	sqlQueryFilePolicyLimitOffset = `select id,path,fsid,ino,perm,timestamp,status from file_policy limit ? offset ?`
+	sqlQueryFilePolicyLimitOffset = `select id,path,fsid,ino,perm,timestamp,status from file_policy where id>? limit ?`
 	sqlDeleteFilePolicyById       = `delete from file_policy where id=?`
 	sqlDeleteFileEventById        = `delete from file_event where id=?`
 	sqlUpdateFileEventStatusById  = `update file_event set status=? where id=?`
@@ -60,7 +60,7 @@ func (w *Worker) queryFileEventOffsetLimit(limit, offset int) (events []file.Eve
 		return
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query(limit, offset)
+	rows, err := stmt.Query(offset, limit)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -101,7 +101,7 @@ func (w *Worker) queryFilePolicyLimitOffset(limit, offset int) (policies []file.
 		return
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query(limit, offset)
+	rows, err := stmt.Query(offset, limit)
 	if err != nil {
 		logrus.Error(err)
 		return

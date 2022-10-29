@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	sqlQueryProcessLimitOffset      = `select id,workdir,binary,argv,count,judge,status from process_event limit ? offset ?`
+	sqlQueryProcessLimitOffset      = `select id,workdir,binary,argv,count,judge,status from process_event where id>? limit ?`
 	sqlUpdateProcessStatus          = `update process_event set status=? where id=?`
 	sqlQueryProcessCmdById          = `select workdir,binary,argv from process_event where id=?`
 	sqlQueryProcessPolicyCount      = `select count(*) from process_event`
@@ -20,7 +20,7 @@ func (w *Worker) queryLimitOffset(limit, offset int) (events []Event, err error)
 		return
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query(limit, offset)
+	rows, err := stmt.Query(offset, limit)
 	if err != nil {
 		logrus.Error(err)
 		return
