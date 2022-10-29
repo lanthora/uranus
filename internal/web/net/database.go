@@ -9,8 +9,8 @@ import (
 const (
 	sqlInsertNetPolicy           = `insert into net_policy(priority,addr_src_begin,addr_src_end,addr_dst_begin,addr_dst_end,protocol_begin,protocol_end,port_src_begin,port_src_end,port_dst_begin,port_dst_end,flags,response) values(?,?,?,?,?,?,?,?,?,?,?,?,?)`
 	sqlDeleteNetPolicyById       = `delete from net_policy where id=?`
-	sqlQueryNetPolicyLimitOffset = `select id,priority,addr_src_begin,addr_src_end,addr_dst_begin,addr_dst_end,protocol_begin,protocol_end,port_src_begin,port_src_end,port_dst_begin,port_dst_end,flags,response from net_policy limit ? offset ?`
-	sqlQueryNetEventLimitOffset  = `select id,protocol,saddr,daddr,sport,dport,timestamp,policy,status from net_event limit ? offset ?`
+	sqlQueryNetPolicyLimitOffset = `select id,priority,addr_src_begin,addr_src_end,addr_dst_begin,addr_dst_end,protocol_begin,protocol_end,port_src_begin,port_src_end,port_dst_begin,port_dst_end,flags,response from net_policy where id>? limit ?`
+	sqlQueryNetEventLimitOffset  = `select id,protocol,saddr,daddr,sport,dport,timestamp,policy,status from net_event where id>? limit ?`
 	sqlDeleteNetEventById        = `delete from net_event where id=?`
 	sqlUpdateNetEventStatusById  = `update net_event set status=? where id=?`
 	sqlQueryNetPolicyCount       = `select count(*) from net_policy`
@@ -77,7 +77,7 @@ func (w *Worker) queryNetPolicyLimitOffset(limit, offset int) (policies []net.Po
 		return
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query(limit, offset)
+	rows, err := stmt.Query(offset, limit)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -112,7 +112,7 @@ func (w *Worker) queryNetEventOffsetLimit(limit, offset int) (events []net.Event
 		return
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query(limit, offset)
+	rows, err := stmt.Query(offset, limit)
 	if err != nil {
 		logrus.Error(err)
 		return
