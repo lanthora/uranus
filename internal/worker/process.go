@@ -189,7 +189,12 @@ func (w *ProcessWorker) updateCmd(workdir, binary, argv string, judge int) (err 
 	if err != nil {
 		status = process.StatusPending
 	}
-	if status == process.StatusTrusted && judge != process.StatusJudgeDefense {
+
+	if judge == process.StatusJudgeDefense {
+		status = process.StatusUntrusted
+	}
+
+	if status == process.StatusTrusted {
 		process.SetTrustedCmd(workdir, binary, argv)
 	}
 
