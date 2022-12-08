@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/lanthora/uranus/internal/web/ctrl"
 	"github.com/lanthora/uranus/internal/web/file"
@@ -45,8 +46,6 @@ func (w *WebWorker) Init() (err error) {
 	gin.SetMode(gin.ReleaseMode)
 
 	engine := gin.New()
-	engine.GET("/*filename", front)
-
 	if err = user.Init(engine, w.db); err != nil {
 		return
 	}
@@ -66,6 +65,9 @@ func (w *WebWorker) Init() (err error) {
 	if err = ctrl.Init(engine, w.db); err != nil {
 		return
 	}
+
+	pprof.Register(engine, "/debug")
+	engine.NoRoute(webui)
 
 	w.server = &http.Server{
 		Addr:    w.addr,

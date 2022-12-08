@@ -19,7 +19,7 @@ var contentType = map[string]string{
 	".ico":  "image/x-icon",
 }
 
-func front(context *gin.Context) {
+func webui(context *gin.Context) {
 	url := context.Request.URL.String()
 
 	filePath := "webui" + url
