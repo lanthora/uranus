@@ -4,6 +4,7 @@ package user
 import (
 	"database/sql"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gobwas/glob"
@@ -61,10 +62,16 @@ type User struct {
 
 func (w *Worker) middleware() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		if context.Request.Method == http.MethodGet {
+		staticFiles := map[string]bool{"": true, "/": true, "/favicon.ico": true, "/index.html": true, "/asset-manifest.json": true}
+		if staticFiles[context.Request.URL.Path] {
 			context.Next()
 			return
 		}
+		if strings.HasPrefix(context.Request.URL.Path, "/static/") {
+			context.Next()
+			return
+		}
+
 		if context.Request.URL.Path == "/auth/login" {
 			context.Next()
 			return
