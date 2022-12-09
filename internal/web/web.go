@@ -66,7 +66,7 @@ func (w *WebWorker) Init() (err error) {
 		return
 	}
 
-	pprof.Register(engine, "/debug")
+	pprof.Register(engine)
 	engine.NoRoute(webui)
 
 	w.server = &http.Server{
