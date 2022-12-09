@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/gobwas/glob"
 	"github.com/google/uuid"
@@ -62,6 +63,7 @@ type User struct {
 
 func (w *Worker) middleware() gin.HandlerFunc {
 	return func(context *gin.Context) {
+		// 静态资源不校验权限
 		staticFiles := map[string]bool{"": true, "/": true, "/favicon.ico": true, "/index.html": true, "/asset-manifest.json": true}
 		if staticFiles[context.Request.URL.Path] {
 			context.Next()
@@ -72,6 +74,13 @@ func (w *Worker) middleware() gin.HandlerFunc {
 			return
 		}
 
+		// pprof 调试相关的校验由 ctrl 中的 middleware 校验
+		if strings.HasPrefix(context.Request.URL.Path, pprof.DefaultPrefix) {
+			context.Next()
+			return
+		}
+
+		// 不校验登录接口
 		if context.Request.URL.Path == "/auth/login" {
 			context.Next()
 			return
