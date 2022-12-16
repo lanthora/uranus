@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lanthora/uranus/internal/config"
 	"github.com/lanthora/uranus/internal/web/render"
+	"github.com/lanthora/uranus/internal/web/user"
 	"github.com/lanthora/uranus/pkg/net"
 	"github.com/sirupsen/logrus"
 )
@@ -17,7 +18,7 @@ type Worker struct {
 	config *config.Config
 }
 
-func Init(engine *gin.Engine, db *sql.DB) (err error) {
+func Init(router *gin.Engine, db *sql.DB) (err error) {
 	config, err := config.New(db)
 	if err != nil {
 		return
@@ -27,17 +28,20 @@ func Init(engine *gin.Engine, db *sql.DB) (err error) {
 		config: config,
 	}
 
-	engine.POST("/net/enableModule", w.enableModule)
-	engine.POST("/net/disableModule", w.disableModule)
-	engine.POST("/net/showModuleStatus", w.showModuleStatus)
+	netGroup := router.Group("/net")
+	netGroup.Use(user.AuthMiddleware())
 
-	engine.POST("/net/addPolicy", w.addPolicy)
-	engine.POST("/net/deletePolicy", w.deletePolicy)
-	engine.POST("/net/listPolicies", w.listPolicies)
+	netGroup.POST("/enableModule", w.enableModule)
+	netGroup.POST("/disableModule", w.disableModule)
+	netGroup.POST("/showModuleStatus", w.showModuleStatus)
 
-	engine.POST("/net/updateEventStatus", w.updateEventStatus)
-	engine.POST("/net/deleteEvent", w.deleteEvent)
-	engine.POST("/net/listEvents", w.listEvents)
+	netGroup.POST("/addPolicy", w.addPolicy)
+	netGroup.POST("/deletePolicy", w.deletePolicy)
+	netGroup.POST("/listPolicies", w.listPolicies)
+
+	netGroup.POST("/updateEventStatus", w.updateEventStatus)
+	netGroup.POST("/deleteEvent", w.deleteEvent)
+	netGroup.POST("/listEvents", w.listEvents)
 
 	return
 }

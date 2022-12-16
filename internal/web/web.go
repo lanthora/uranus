@@ -45,33 +45,35 @@ func (w *WebWorker) serve() {
 func (w *WebWorker) Init() (err error) {
 	gin.SetMode(gin.ReleaseMode)
 
-	engine := gin.New()
-	if err = user.Init(engine, w.db); err != nil {
+	router := gin.New()
+	if err = user.Init(router, w.db); err != nil {
 		return
 	}
 
-	if err = process.Init(engine, w.db); err != nil {
+	if err = process.Init(router, w.db); err != nil {
 		return
 	}
 
-	if err = file.Init(engine, w.db); err != nil {
+	if err = file.Init(router, w.db); err != nil {
 		return
 	}
 
-	if err = net.Init(engine, w.db); err != nil {
+	if err = net.Init(router, w.db); err != nil {
 		return
 	}
 
-	if err = ctrl.Init(engine, w.db); err != nil {
+	if err = ctrl.Init(router, w.db); err != nil {
 		return
 	}
 
-	pprof.Register(engine)
-	engine.NoRoute(webui)
+	router.Use(ctrl.PProfMiddleware())
+	pprof.Register(router)
+
+	router.NoRoute(webui)
 
 	w.server = &http.Server{
 		Addr:    w.addr,
-		Handler: engine,
+		Handler: router,
 	}
 	return
 }

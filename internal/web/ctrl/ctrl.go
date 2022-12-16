@@ -8,25 +8,29 @@ import (
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/lanthora/uranus/internal/web/render"
+	"github.com/lanthora/uranus/internal/web/user"
 	"github.com/lanthora/uranus/pkg/ctrl"
 	"github.com/sirupsen/logrus"
 )
 
 type Worker struct {
-	db           *sql.DB
-	debugEnabled bool
+	db *sql.DB
 }
 
-func Init(engine *gin.Engine, db *sql.DB) (err error) {
-	w := &Worker{
-		db:           db,
-		debugEnabled: false,
-	}
+var debugEnabled bool
 
-	engine.Use(w.middleware())
-	engine.POST("/ctrl/shutdown", w.shutdown)
-	engine.GET("/ctrl/enableDebug", w.enableDebug)
-	engine.GET("/ctrl/disableDebug", w.disableDebug)
+func Init(router *gin.Engine, db *sql.DB) (err error) {
+	w := &Worker{
+		db: db,
+	}
+	debugEnabled = false
+
+	ctrlGroup := router.Group("/ctrl")
+	ctrlGroup.Use(user.AuthMiddleware())
+
+	ctrlGroup.POST("/shutdown", w.shutdown)
+	ctrlGroup.GET("/enableDebug", w.enableDebug)
+	ctrlGroup.GET("/disableDebug", w.disableDebug)
 	return
 }
 
@@ -36,21 +40,21 @@ func (w *Worker) shutdown(context *gin.Context) {
 }
 
 func (w *Worker) enableDebug(context *gin.Context) {
-	w.debugEnabled = true
+	debugEnabled = true
 	logrus.Info("pprof debug enabled")
 	render.Status(context, render.StatusSuccess)
 }
 
 func (w *Worker) disableDebug(context *gin.Context) {
-	w.debugEnabled = false
+	debugEnabled = false
 	logrus.Info("pprof debug disabled")
 	render.Status(context, render.StatusSuccess)
 }
 
-func (w *Worker) middleware() gin.HandlerFunc {
+func PProfMiddleware() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		if strings.HasPrefix(context.Request.URL.Path, pprof.DefaultPrefix) {
-			if !w.debugEnabled {
+			if !debugEnabled {
 				context.Abort()
 				return
 			}

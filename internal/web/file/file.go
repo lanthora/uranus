@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lanthora/uranus/internal/config"
 	"github.com/lanthora/uranus/internal/web/render"
+	"github.com/lanthora/uranus/internal/web/user"
 	"github.com/lanthora/uranus/pkg/file"
 	"github.com/sirupsen/logrus"
 )
@@ -17,7 +18,7 @@ type Worker struct {
 	config *config.Config
 }
 
-func Init(engine *gin.Engine, db *sql.DB) (err error) {
+func Init(router *gin.Engine, db *sql.DB) (err error) {
 	config, err := config.New(db)
 	if err != nil {
 		return
@@ -26,20 +27,24 @@ func Init(engine *gin.Engine, db *sql.DB) (err error) {
 		db:     db,
 		config: config,
 	}
-	engine.POST("/file/enableModule", w.enableModule)
-	engine.POST("/file/disableModule", w.disableModule)
-	engine.POST("/file/showModuleStatus", w.showModuleStatus)
 
-	engine.POST("/file/addPolicy", w.addPolicy)
-	engine.POST("/file/updatePolicy", w.updatePolicy)
-	engine.POST("/file/deletePolicy", w.deletePolicy)
-	engine.POST("/file/clearPolicies", w.clearPolicies)
-	engine.POST("/file/listPolicies", w.listPolicies)
-	engine.POST("/file/showPolicy", w.showPolicy)
+	fileGroup := router.Group("/file")
+	fileGroup.Use(user.AuthMiddleware())
 
-	engine.POST("/file/updateEventStatus", w.updateEventStatus)
-	engine.POST("/file/deleteEvent", w.deleteEvent)
-	engine.POST("/file/listEvents", w.listEvents)
+	fileGroup.POST("/enableModule", w.enableModule)
+	fileGroup.POST("/disableModule", w.disableModule)
+	fileGroup.POST("/showModuleStatus", w.showModuleStatus)
+
+	fileGroup.POST("/addPolicy", w.addPolicy)
+	fileGroup.POST("/updatePolicy", w.updatePolicy)
+	fileGroup.POST("/deletePolicy", w.deletePolicy)
+	fileGroup.POST("/clearPolicies", w.clearPolicies)
+	fileGroup.POST("/listPolicies", w.listPolicies)
+	fileGroup.POST("/showPolicy", w.showPolicy)
+
+	fileGroup.POST("/updateEventStatus", w.updateEventStatus)
+	fileGroup.POST("/deleteEvent", w.deleteEvent)
+	fileGroup.POST("/listEvents", w.listEvents)
 	return
 }
 
