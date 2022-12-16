@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lanthora/uranus/internal/config"
 	"github.com/lanthora/uranus/internal/web/render"
+	"github.com/lanthora/uranus/internal/web/user"
 	"github.com/lanthora/uranus/pkg/process"
 )
 
@@ -26,7 +27,7 @@ type Event struct {
 	Status  int64  `json:"status"`
 }
 
-func Init(engine *gin.Engine, db *sql.DB) (err error) {
+func Init(router *gin.Engine, db *sql.DB) (err error) {
 	config, err := config.New(db)
 	if err != nil {
 		return
@@ -35,19 +36,22 @@ func Init(engine *gin.Engine, db *sql.DB) (err error) {
 		db:     db,
 		config: config,
 	}
-	engine.POST("/process/enableModule", w.enableModule)
-	engine.POST("/process/disableModule", w.disableModule)
-	engine.POST("/process/showModuleStatus", w.showModuleStatus)
 
-	engine.POST("/process/updateWorkMode", w.updateWorkMode)
-	engine.POST("/process/showWorkMode", w.showWorkMode)
+	processGroup := router.Group("/process")
+	processGroup.Use(user.AuthMiddleware())
+	processGroup.POST("/enableModule", w.enableModule)
+	processGroup.POST("/disableModule", w.disableModule)
+	processGroup.POST("/showModuleStatus", w.showModuleStatus)
 
-	engine.POST("/process/updateEventStatus", w.updateEventStatus)
-	engine.POST("/process/deleteEvents", w.deleteEvents)
-	engine.POST("/process/listEvents", w.listEvents)
+	processGroup.POST("/updateWorkMode", w.updateWorkMode)
+	processGroup.POST("/showWorkMode", w.showWorkMode)
 
-	engine.POST("/process/updateDefaultEventStatus", w.updateDefaultEventStatus)
-	engine.POST("/process/showDefaultEventStatus", w.showDefaultEventStatus)
+	processGroup.POST("/updateEventStatus", w.updateEventStatus)
+	processGroup.POST("/deleteEvents", w.deleteEvents)
+	processGroup.POST("/listEvents", w.listEvents)
+
+	processGroup.POST("/updateDefaultEventStatus", w.updateDefaultEventStatus)
+	processGroup.POST("/showDefaultEventStatus", w.showDefaultEventStatus)
 	return
 }
 

@@ -4,9 +4,7 @@ package user
 import (
 	"database/sql"
 	"net/http"
-	"strings"
 
-	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/gobwas/glob"
 	"github.com/google/uuid"
@@ -14,38 +12,38 @@ import (
 	"github.com/lanthora/uranus/internal/web/render"
 )
 
+var loggedUser *lru.Cache
+
 type Worker struct {
-	engine *gin.Engine
-	db     *sql.DB
+	db *sql.DB
 
 	onlineUserMax int
-	loggedUser    *lru.Cache
 }
 
-func Init(engine *gin.Engine, db *sql.DB) (err error) {
+func Init(router *gin.Engine, db *sql.DB) (err error) {
 	onlineUserMax := 10
-	loggedUser, err := lru.New(onlineUserMax)
+	loggedUser, err = lru.New(onlineUserMax)
 	if err != nil {
 		return
 	}
 
 	w := &Worker{
-		loggedUser:    loggedUser,
 		onlineUserMax: onlineUserMax,
-		engine:        engine,
 		db:            db,
 	}
 
-	w.engine.Use(w.middleware())
+	authGroup := router.Group("/auth")
+	authGroup.Use(AuthMiddleware())
+	authGroup.POST("/login", w.login)
+	authGroup.POST("/showCurrentUserInfo", w.showCurrentUserInfo)
+	authGroup.POST("/logout", w.logout)
 
-	w.engine.POST("/auth/login", w.login)
-	w.engine.POST("/auth/showCurrentUserInfo", w.showCurrentUserInfo)
-	w.engine.POST("/auth/logout", w.logout)
-
-	w.engine.POST("/admin/addUser", w.addUser)
-	w.engine.POST("/admin/deleteUser", w.deleteUser)
-	w.engine.POST("/admin/updateUserInfo", w.updateUserInfo)
-	w.engine.POST("/admin/listAllUsers", w.listAllUsers)
+	adminGroup := router.Group("/admin")
+	adminGroup.Use(AuthMiddleware())
+	adminGroup.POST("/addUser", w.addUser)
+	adminGroup.POST("/deleteUser", w.deleteUser)
+	adminGroup.POST("/updateUserInfo", w.updateUserInfo)
+	adminGroup.POST("/listAllUsers", w.listAllUsers)
 
 	if err = w.initUserTable(); err != nil {
 		return
@@ -61,25 +59,8 @@ type User struct {
 	Permissions string `json:"permissions"`
 }
 
-func (w *Worker) middleware() gin.HandlerFunc {
+func AuthMiddleware() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		// 静态资源不校验权限
-		staticFiles := map[string]bool{"": true, "/": true, "/favicon.ico": true, "/index.html": true, "/asset-manifest.json": true}
-		if staticFiles[context.Request.URL.Path] {
-			context.Next()
-			return
-		}
-		if strings.HasPrefix(context.Request.URL.Path, "/static/") {
-			context.Next()
-			return
-		}
-
-		// pprof 调试相关的校验由 ctrl 中的 middleware 校验
-		if strings.HasPrefix(context.Request.URL.Path, pprof.DefaultPrefix) {
-			context.Next()
-			return
-		}
-
 		// 不校验登录接口
 		if context.Request.URL.Path == "/auth/login" {
 			context.Next()
@@ -92,7 +73,7 @@ func (w *Worker) middleware() gin.HandlerFunc {
 			return
 		}
 
-		user, ok := w.loggedUser.Get(session)
+		user, ok := loggedUser.Get(session)
 		if !ok {
 			render.Status(context, render.StatusUserNotLoggedIn)
 			context.Abort()
@@ -152,7 +133,7 @@ func (w *Worker) login(context *gin.Context) {
 		return
 	}
 	session := uuid.NewString()
-	w.loggedUser.Add(session, response)
+	loggedUser.Add(session, response)
 	updateSession(context, session)
 	render.Status(context, render.StatusSuccess)
 }
@@ -164,7 +145,7 @@ func (w *Worker) showCurrentUserInfo(context *gin.Context) {
 		return
 	}
 
-	current, ok := w.loggedUser.Get(session)
+	current, ok := loggedUser.Get(session)
 	if !ok {
 		render.Status(context, render.StatusUserNotLoggedIn)
 		return
@@ -175,7 +156,7 @@ func (w *Worker) showCurrentUserInfo(context *gin.Context) {
 
 func (w *Worker) logout(context *gin.Context) {
 	session, _ := context.Cookie("session")
-	w.loggedUser.Remove(session)
+	loggedUser.Remove(session)
 
 	deleteSession(context)
 	render.Status(context, render.StatusSuccess)
