@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/lanthora/uranus/pkg/connector"
+	"github.com/lanthora/uranus/pkg/exector"
 	"github.com/sirupsen/logrus"
 )
 
@@ -73,7 +73,7 @@ func SetPolicy(path string, perm, flag int) (fsid, ino int64, status int, err er
 		return
 	}
 
-	tmp, err := connector.Exec(string(bytes), time.Second)
+	tmp, err := exector.Exec(string(bytes), time.Second)
 	if err != nil {
 		return
 	}
@@ -105,7 +105,7 @@ func SetPolicy(path string, perm, flag int) (fsid, ino int64, status int, err er
 }
 
 func Enable() bool {
-	tmp, err := connector.Exec(`{"type":"user::file::enable"}`, time.Second)
+	tmp, err := exector.Exec(`{"type":"user::file::enable"}`, time.Second)
 	if err != nil {
 		return false
 	}
@@ -121,7 +121,7 @@ func Enable() bool {
 }
 
 func Disable() bool {
-	tmp, err := connector.Exec(`{"type":"user::file::disable"}`, time.Second)
+	tmp, err := exector.Exec(`{"type":"user::file::disable"}`, time.Second)
 	if err != nil {
 		return false
 	}
@@ -137,7 +137,7 @@ func Disable() bool {
 }
 
 func ClearPolicy() bool {
-	tmp, err := connector.Exec(`{"type":"user::file::clear"}`, time.Second)
+	tmp, err := exector.Exec(`{"type":"user::file::clear"}`, time.Second)
 	if err != nil {
 		return false
 	}

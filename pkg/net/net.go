@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/lanthora/uranus/pkg/connector"
+	"github.com/lanthora/uranus/pkg/exector"
 )
 
 const (
@@ -83,7 +83,7 @@ func AddPolicy(policy Policy) bool {
 		return false
 	}
 
-	tmp, err := connector.Exec(string(bytes), time.Second)
+	tmp, err := exector.Exec(string(bytes), time.Second)
 	if err != nil {
 		return false
 	}
@@ -112,7 +112,7 @@ func DeletePolicy(id int) bool {
 		return false
 	}
 
-	tmp, err := connector.Exec(string(bytes), time.Second)
+	tmp, err := exector.Exec(string(bytes), time.Second)
 	if err != nil {
 		return false
 	}
@@ -128,7 +128,7 @@ func DeletePolicy(id int) bool {
 }
 
 func Enable() bool {
-	tmp, err := connector.Exec(`{"type":"user::net::enable"}`, time.Second)
+	tmp, err := exector.Exec(`{"type":"user::net::enable"}`, time.Second)
 	if err != nil {
 		return false
 	}
@@ -144,7 +144,7 @@ func Enable() bool {
 }
 
 func Disable() bool {
-	tmp, err := connector.Exec(`{"type":"user::net::disable"}`, time.Second)
+	tmp, err := exector.Exec(`{"type":"user::net::disable"}`, time.Second)
 	if err != nil {
 		return false
 	}
@@ -160,7 +160,7 @@ func Disable() bool {
 }
 
 func ClearPolicy() bool {
-	tmp, err := connector.Exec(`{"type":"user::net::clear"}`, time.Second)
+	tmp, err := exector.Exec(`{"type":"user::net::clear"}`, time.Second)
 	if err != nil {
 		return false
 	}
