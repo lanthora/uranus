@@ -11,12 +11,15 @@ import (
 )
 
 type Connector struct {
-	lname string
-	conn  *net.UnixConn
+	lname  string
+	conn   *net.UnixConn
+	buffer []byte
 }
 
 func New() *Connector {
-	return &Connector{}
+	return &Connector{
+		buffer: make([]byte, (1<<12)*32),
+	}
 }
 
 func Exec(request string, timeout time.Duration) (response string, err error) {
@@ -80,12 +83,10 @@ func (c *Connector) Send(msg string) (err error) {
 }
 
 func (c *Connector) Recv() (msg string, err error) {
-	// 取内核能上报的最大值,(1<<12)*32 来自内核源码
-	buffer := make([]byte, (1<<12)*32)
-	n, err := c.conn.Read(buffer)
+	n, err := c.conn.Read(c.buffer)
 	if err != nil {
 		return
 	}
-	msg = string(buffer[0:n])
+	msg = string(c.buffer[0:n])
 	return
 }

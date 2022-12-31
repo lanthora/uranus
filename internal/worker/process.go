@@ -27,14 +27,15 @@ type ProcessWorker struct {
 
 	running bool
 	wg      sync.WaitGroup
-	conn    connector.Connector
+	conn    *connector.Connector
 	config  *config.Config
 	dog     *watchdog.Watchdog
 }
 
 func NewProcessWorker(db *sql.DB) *ProcessWorker {
 	w := ProcessWorker{
-		db: db,
+		db:   db,
+		conn: connector.New(),
 	}
 	return &w
 }

@@ -27,14 +27,15 @@ type NetWorker struct {
 
 	running bool
 	wg      sync.WaitGroup
-	conn    connector.Connector
+	conn    *connector.Connector
 	config  *config.Config
 	dog     *watchdog.Watchdog
 }
 
 func NewNetWorker(db *sql.DB) *NetWorker {
 	w := NetWorker{
-		db: db,
+		db:   db,
+		conn: connector.New(),
 	}
 	return &w
 }
