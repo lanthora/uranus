@@ -22,25 +22,6 @@ func New() *Connector {
 	}
 }
 
-func Exec(request string, timeout time.Duration) (response string, err error) {
-	conn := New()
-	if err = conn.Connect(); err != nil {
-		return
-	}
-	defer conn.Close()
-
-	if err = conn.Send(request); err != nil {
-		return
-	}
-
-	if err = conn.Shutdown(time.Now().Add(timeout)); err != nil {
-		return
-	}
-
-	response, err = conn.Recv()
-	return
-}
-
 func (c *Connector) Connect() (err error) {
 	lname := fmt.Sprintf("/tmp/hackernel-%s.sock", uuid.New().String())
 	rname := "/tmp/hackernel.sock"
