@@ -13,11 +13,13 @@ import (
 type SampleWorker struct {
 	running bool
 	wg      sync.WaitGroup
-	conn    connector.Connector
+	conn    *connector.Connector
 }
 
 func NewWorker() *SampleWorker {
-	w := SampleWorker{}
+	w := SampleWorker{
+		conn: connector.New(),
+	}
 	return &w
 }
 

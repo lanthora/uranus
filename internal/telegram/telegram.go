@@ -17,13 +17,14 @@ import (
 type TelegramWorker struct {
 	running bool
 	wg      sync.WaitGroup
-	conn    connector.Connector
+	conn    *connector.Connector
 	bot     *Bot
 }
 
 func NewWorker(token string, ownerID int64) *TelegramWorker {
 	w := TelegramWorker{
-		bot: NewBot(token, ownerID),
+		bot:  NewBot(token, ownerID),
+		conn: connector.New(),
 	}
 	return &w
 }
