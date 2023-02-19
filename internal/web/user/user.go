@@ -8,11 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gobwas/glob"
 	"github.com/google/uuid"
-	lru "github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/lanthora/uranus/internal/web/render"
 )
 
-var loggedUser *lru.Cache
+var loggedUser *lru.Cache[string, User]
 
 type Worker struct {
 	db *sql.DB
@@ -22,7 +22,7 @@ type Worker struct {
 
 func Init(router *gin.Engine, db *sql.DB) (err error) {
 	onlineUserMax := 10
-	loggedUser, err = lru.New(onlineUserMax)
+	loggedUser, err = lru.New[string, User](onlineUserMax)
 	if err != nil {
 		return
 	}
@@ -80,7 +80,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		g, err := glob.Compile(user.(User).Permissions)
+		g, err := glob.Compile(user.Permissions)
 		if err != nil {
 			render.Status(context, render.StatusUserPermissionDenied)
 			context.Abort()
