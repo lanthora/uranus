@@ -1,0 +1,7 @@
+# cp notify.yaml ~/.uranus/notify.yaml
+# update your config
+# systemctl start uranus-notify --user
+server: https://uranus.armix.cc
+username: "test"
+password: "123456"
+process-event-offset: 0
