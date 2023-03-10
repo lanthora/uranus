@@ -18,6 +18,6 @@ go.sum
 cmd/sample/uranus-sample
 cmd/telegram/uranus-telegram
 cmd/web/uranus-web
-cmd/uprobe/uranus-uprobe
+cmd/notify/uranus-notify
 internal/web/webui/*
 !.gitkeep
