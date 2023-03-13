@@ -26,6 +26,8 @@ type NotifyWorker struct {
 	ProcessEventOffset int64
 }
 
+const notifyNumberMax = 10
+
 func NewWorker(server, username, password string, processEventOffset int64) *NotifyWorker {
 	w := NotifyWorker{
 		server:             server,
@@ -72,11 +74,20 @@ func (w *NotifyWorker) Start() (err error) {
 	go w.run()
 	return
 }
+func (w *NotifyWorker) notify(title, message string) {
+	err := beeep.Notify(title, message, "")
+	if err != nil {
+		logrus.Error(err)
+		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+		return
+	}
+	time.Sleep(500 * time.Millisecond)
+}
 
 func (w *NotifyWorker) run() {
 	defer w.wg.Done()
 	for w.running {
-		body, err := json.Marshal(map[string]int64{"offset": w.ProcessEventOffset, "limit": 100})
+		body, err := json.Marshal(map[string]int64{"offset": w.ProcessEventOffset, "limit": 5000})
 		if err != nil {
 			logrus.Error(err)
 			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
@@ -112,20 +123,31 @@ func (w *NotifyWorker) run() {
 		}
 		if doc.Data == nil {
 			time.Sleep(5 * time.Second)
+			continue
 		}
 
-		for _, event := range doc.Data {
+		for idx, event := range doc.Data {
 			w.ProcessEventOffset = event.ID
 			title := fmt.Sprintf("进程防护事件 (ID: %d)", event.ID)
 			message := event.Argv
+			w.notify(title, message)
 
-			logrus.Tracef("message=%s", message)
-			err = beeep.Notify(title, message, "")
-			if err != nil {
-				logrus.Error(err)
-				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-				return
+			if idx > notifyNumberMax {
+				break
 			}
+		}
+
+		if w.ProcessEventOffset != doc.Data[len(doc.Data)-1].ID {
+			title := "进程防护事件"
+			message := "已忽略积压的通知,请通过网页查看"
+			w.notify(title, message)
+
+			event := doc.Data[len(doc.Data)-1]
+			w.ProcessEventOffset = event.ID
+			title = fmt.Sprintf("进程防护事件 (ID: %d)", w.ProcessEventOffset)
+			message = event.Argv
+			w.notify(title, message)
+			break
 		}
 	}
 }
