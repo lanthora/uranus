@@ -3,6 +3,7 @@ package notify
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
@@ -75,7 +76,7 @@ func (w *NotifyWorker) Start() (err error) {
 func (w *NotifyWorker) run() {
 	defer w.wg.Done()
 	for w.running {
-		body, err := json.Marshal(map[string]int64{"offset": w.ProcessEventOffset, "limit": 1})
+		body, err := json.Marshal(map[string]int64{"offset": w.ProcessEventOffset, "limit": 100})
 		if err != nil {
 			logrus.Error(err)
 			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
@@ -115,8 +116,7 @@ func (w *NotifyWorker) run() {
 
 		for _, event := range doc.Data {
 			w.ProcessEventOffset = event.ID
-
-			title := "进程防护事件"
+			title := fmt.Sprintf("进程防护事件 (ID: %d)", event.ID)
 			message := event.Argv
 
 			logrus.Tracef("message=%s", message)
@@ -126,7 +126,6 @@ func (w *NotifyWorker) run() {
 				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 				return
 			}
-			time.Sleep(time.Second)
 		}
 	}
 }
