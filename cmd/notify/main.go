@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/lanthora/uranus/internal/notify"
@@ -20,16 +22,32 @@ func main() {
 	config := viper.New()
 	config.SetConfigName("notify")
 	config.SetConfigType("yaml")
-	config.AddConfigPath("$HOME/.uranus")
+	config.AddConfigPath("$HOME/.config/hackernel")
 
 	if err := config.ReadInConfig(); err != nil {
 		logrus.Fatal(err)
 	}
 
+	cacheFilePath := fmt.Sprintf("%s/.cache/hackernel/notify.yaml", os.Getenv("HOME"))
+	cache := viper.New()
+	cache.SetConfigName("notify")
+	cache.SetConfigType("yaml")
+	cache.AddConfigPath(filepath.Dir(cacheFilePath))
+	cache.SetDefault("process-event-offset", int64(0))
+	os.MkdirAll(filepath.Dir(cacheFilePath), os.ModePerm)
+
+	if err := cache.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			logrus.Info("The cache file was not found, it will be created when the process exits")
+		} else {
+			logrus.Fatal(err)
+		}
+	}
+
 	server := config.GetString("server")
 	username := config.GetString("username")
 	password := config.GetString("password")
-	processEventOffset := config.GetInt64("process-event-offset")
+	processEventOffset := cache.GetInt64("process-event-offset")
 
 	notifier := notify.NewWorker(server, username, password, processEventOffset)
 	notifier.Start()
@@ -39,9 +57,8 @@ func main() {
 
 	notifier.Stop()
 
-	// 每次正常退出的时候记录已经获取过通知的偏移量,避免重启后重复获取
-	config.Set("process-event-offset", notifier.ProcessEventOffset)
-	if err := config.WriteConfig(); err != nil {
+	cache.Set("process-event-offset", notifier.ProcessEventOffset)
+	if err := cache.WriteConfigAs(cacheFilePath); err != nil {
 		logrus.Error(err)
 	}
 }
