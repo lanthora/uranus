@@ -48,8 +48,10 @@ func main() {
 	username := config.GetString("username")
 	password := config.GetString("password")
 	processEventOffset := cache.GetInt64("process-event-offset")
+	fileEventOffset := cache.GetInt64("file-event-offset")
+	netEventOffset := cache.GetInt64("net-event-offset")
 
-	notifier := notify.NewWorker(server, username, password, processEventOffset)
+	notifier := notify.NewWorker(server, username, password, processEventOffset, fileEventOffset, netEventOffset)
 	notifier.Start()
 
 	sig := <-sigchan
@@ -58,6 +60,8 @@ func main() {
 	notifier.Stop()
 
 	cache.Set("process-event-offset", notifier.ProcessEventOffset)
+	cache.Set("file-event-offset", notifier.FileEventOffset)
+	cache.Set("net-event-offset", notifier.NetEventOffset)
 	if err := cache.WriteConfigAs(cacheFilePath); err != nil {
 		logrus.Error(err)
 	}
